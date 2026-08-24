@@ -19,6 +19,7 @@
   python skills-check-viewer.py --port 18765
   python skills-check-viewer.py --no-browser
   python skills-check-viewer.py --print
+  python skills-check-viewer.py --print --skill "C:\\Users\\...\\skills\\ue-dev-skill"
 """
 
 from __future__ import annotations
@@ -1870,9 +1871,8 @@ def write_skill_tags(root: Path, folder: str, tags: list[str]) -> list[str]:
     return clean
 
 
-def scan_skills(root: Path) -> dict:
-    skills = [check_skill(d) for d in list_skill_dirs(root)]
-    summary = {
+def _skill_summary(skills: list) -> dict:
+    return {
         "total": len(skills),
         "pass": sum(1 for s in skills if s["status"] == "pass"),
         "warn": sum(1 for s in skills if s["status"] == "warn"),
@@ -1883,6 +1883,22 @@ def scan_skills(root: Path) -> dict:
         "missing_review_intro": sum(1 for s in skills if not s.get("has_review_intro")),
         "missing_open_script": sum(1 for s in skills if not s["has_open_script"]),
     }
+
+
+def filter_scan_to_folder(data: dict, folder: str) -> dict:
+    """Keep one skill in a --print scan so single-page preflight does not surface siblings."""
+    skills = [sk for sk in data["skills"] if sk["folder"] == folder]
+    if not skills:
+        raise SystemExit(f"扫描结果里没有 skill: {folder}")
+    out = dict(data)
+    out["skills"] = skills
+    out["summary"] = _skill_summary(skills)
+    return out
+
+
+def scan_skills(root: Path) -> dict:
+    skills = [check_skill(d) for d in list_skill_dirs(root)]
+    summary = _skill_summary(skills)
     used: dict[str, int] = {}
     for s in skills:
         for t in s.get("tags", []):
@@ -3421,7 +3437,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--skill",
-        help="某个 skill 目录：打开总览数据并直接进入该 skill 单页",
+        help="某个 skill 目录：打开该 skill 单页；与 --print 合用时只打印该 skill 的体检",
     )
     parser.add_argument(
         "--print",
@@ -3474,6 +3490,8 @@ def main() -> None:
 
     data = scan_skills(root)
     data["initial_folder"] = initial_folder
+    if args.print and initial_folder:
+        data = filter_scan_to_folder(data, initial_folder)
     print_summary(data)
 
     if args.print:

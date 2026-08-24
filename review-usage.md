@@ -13,7 +13,7 @@
 | 命令 | 说明 |
 |------|------|
 | `/skills-check` | 打开 Skills 总览 |
-| `/<skill> -review` | 打开该 skill 单页 |
+| `/<skill> -review` | 只体检该 skill，再打开它的单页 |
 
 ### 在总览页管标签
 

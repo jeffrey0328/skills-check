@@ -1,6 +1,6 @@
 # Adopt Review — copy into a target skill
 
-Use with `references/adopt-review.md`. Tick in the **target** skill folder. Preflight (`open-review.md` § Preflight) runs this list for **every** skill under the current app’s default skills path before opening Review.
+Use with `references/adopt-review.md`. Tick in the **target** skill folder. Overview preflight (`open-review.md` § Preflight) runs this list for **every** skill under the current app’s default skills path. `/<skill> -review` runs it for **that skill only**.
 
 - [ ] `README.md` — required English; intro → `## Install` (English agent prompt: git URL + Steps; no human `git clone`) → `## Features` → `## How to use` → `## Common changes`; no `When` / `How to invoke`, no file-roles or layout table; `[中文](README.zh.md)` after title; no specific agent app name
 - [ ] `README.zh.md` — required Chinese; 简介 → `## 安装`（中文 Agent 提示词：仓库地址 + 步骤）→ `## 功能介绍`（能做什么，短列表）→ `## 怎么用`（你说什么 → 会发生什么，何时触发写在引导句里）→ `## 常见改动`（想改什么 → 对 Agent 说的一句话）；不写 `何时` / `怎么调用` / 文件角色 / 目录清单表; `[English](README.md)` after title; 不要用具体 Agent 应用名

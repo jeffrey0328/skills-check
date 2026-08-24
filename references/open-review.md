@@ -12,28 +12,34 @@ Skip non-skill dirs in that root (`logs`, `scripts`, `.git`, names starting with
 
 ## Preflight (required before every open)
 
-Do this **before** § Overview or § Single. Do not open the page while any skill in the skills root fails the adopt checklist.
+Do this **before** § Overview or § Single. Scope depends on what you are opening. Do not open while the **in-scope** skill(s) fail the adopt checklist.
+
+| Open | Scan | Adapt |
+|------|------|-------|
+| `/skills-check` overview | `--print` (all skills) | Every failing skill in the root |
+| `/<skill> -review` single | `--print --skill <folder>` | **Only that skill.** Leave siblings alone. |
 
 1. Resolve the skills root (§ Skills root).
-2. Run a machine scan:
+2. Run the matching scan:
 
 ```powershell
 python "<skills-check>/scripts/skills-check-viewer.py" --print
+python "<skills-check>/scripts/skills-check-viewer.py" --print --skill "<skill-folder>"
 ```
 
 (If this skill lives under a different root, pass that root as the first argument.)
 
-3. For every skill folder, treat these as **must-adapt** (fix in this turn, then re-scan):
+3. For each **in-scope** skill folder, treat these as **must-adapt** (fix in this turn, then re-scan):
    - missing `README.md` / `README.zh.md` / `review-intro.md` / `review-body.md` / `review-usage.md`
    - README pair missing the other-language entry, missing the agent install prompt (English prompt in `README.md`, Chinese prompt in `README.zh.md`; git URL + steps), or section order is not 简介 → 安装 → 具体内容 → 其他
    - a specific agent app name appears in the skill (write 当前 Agent / Agent instead)
    - missing `SKILL.md` Commands row `-review`
    - missing `scripts/open-review.ps1`, or the script does not call `skills-check\scripts\skills-check-viewer.py`
    - missing `tag.txt` (write a short tag from the folder name; tell the user they can rename)
-4. Adapt each failing skill with `references/adopt-review.md` (extract companions from that skill’s existing `SKILL.md` / `README.md`; do not invent domain workflow). Then `--write-open-scripts`.
-5. Re-run `--print`. Open Review only when required companions and `-review` / opener path pass. Remaining 需关注 (pairing, examples, description length) may stay; mention them in the short summary.
+4. Adapt in-scope failing skills with `references/adopt-review.md` (extract companions from that skill’s existing `SKILL.md` / `README.md`; do not invent domain workflow). Overview: then `--write-open-scripts` once for the root. Single: if that skill’s opener is missing, write **that** `scripts/open-review.ps1` only; do not rewrite every skill.
+5. Re-run the same-scope scan. Open Review only when in-scope required companions and `-review` / opener path pass. Remaining 需关注 (pairing, examples, description length) may stay; mention them in the short summary.
 
-If every skill already passes the must-adapt list, skip writes and continue to § Overview or § Single.
+If in-scope skills already pass the must-adapt list, skip writes and continue to § Overview or § Single.
 
 ## Flags
 
@@ -133,7 +139,7 @@ Violations of the pairing rule are **需关注**, not 缺件. A missing README f
 
 ## Must
 
-- Run § Preflight on every Review open; adapt missing skills in the current app’s skills root before starting the viewer.
+- Run § Preflight on every Review open: overview adapts the fleet; `/<skill> -review` adapts **that skill only**.
 - Edit that skill’s `review-usage.md` when「怎么用」needs changes.
 - Write「怎么用」only as what a person types / says / clicks. Scripts stay under `scripts/` for the agent.
 - Show the overview command on Feishu Review **only** for `skills-check`.
@@ -146,4 +152,5 @@ Violations of the pairing rule are **需关注**, not 缺件. A missing README f
 - List overview / `-review` on other skills’ Feishu Review pages. *(← Must: overview only on this skill’s Review)*
 - Open the Review page in the external browser by default. *(← Must: default to built-in browser)*
 - Keep or revive `-reviewall` on `jeffrey-workflow-skill`. *(← Must: overview is `/skills-check`)*
-- Open Review while a skill in the current skills root still fails the must-adapt list. *(← Must: Preflight first)*
+- Open Review while an **in-scope** skill still fails the must-adapt list. *(← Must: Preflight first)*
+- On `/<skill> -review`, adapt or block on sibling skills. *(← Must: single-page preflight is that skill only)*

@@ -231,7 +231,7 @@ Skill frontmatter = control plane. Review tells the person how they invoke the s
 
 Invoke path belongs in `## 使用方法` as one sentence. Never paste the frontmatter `description` onto Review.
 
-Defaults if unanswered: **ask** — do not guess. Current set: **`jeffrey-workflow-skill`** → **常驻 / 默认**（description）；**`ue-dev-skill`**（UE 唯一入口，域内容在其 `modules/`）→ **条件自动**（`AGENTS.md` + `disable-model-invocation: true`）; **`user-profile`** → **常驻 / 默认**（description）；**`skills-check`** → **常驻 / 默认**（description：创建/编辑 skill 先读本规范；打开 Review 前先适配当前 agent 默认 skills 路径下的全部 skill；其他 skill 本轮被改时同步人类页）。
+Defaults if unanswered: **ask** — do not guess. Current set: **`jeffrey-workflow-skill`** → **常驻 / 默认**（description）；**`ue-dev-skill`**（UE 唯一入口，域内容在其 `modules/`）→ **条件自动**（`AGENTS.md` + `disable-model-invocation: true`）; **`user-profile`** → **常驻 / 默认**（description）；**`skills-check`** → **常驻 / 默认**（description：创建/编辑 skill 先读本规范；总览打开前适配当前 agent 默认 skills 路径下的全部 skill；`/<skill> -review` 只检查当前这一个；其他 skill 本轮被改时同步人类页）。
 
 ## Review flags
 

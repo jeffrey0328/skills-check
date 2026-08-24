@@ -37,12 +37,12 @@ Optional but recommended when the skill already has `references/` or `scripts/`:
 
 ## Fleet adapt (Preflight)
 
-When `open-review.md` § Preflight lists unadapted skills, apply § Checklist to **each** of them in this turn before opening Review.
+When `open-review.md` § Preflight lists unadapted skills **in scope**, apply § Checklist to **each of those** in this turn before opening Review. Overview scope is the whole root; `/<skill> -review` scope is that skill only.
 
 - Extract `review-intro.md` / `review-body.md` / `review-usage.md` / `README.md` / `README.zh.md` from that skill’s existing hub and docs. Write only what those files already say.
 - If `tag.txt` is missing, write one short tag from the folder name and tell the user they can rename it.
 - Add the `-review` Commands row if missing.
-- After the last skill, run `--write-open-scripts` once for the whole root.
+- After the last **in-scope** skill, overview runs `--write-open-scripts` once for the whole root. Single-page: if that skill’s opener is missing, write **that** `scripts/open-review.ps1` only.
 
 ## SKILL.md Commands row
 

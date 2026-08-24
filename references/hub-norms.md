@@ -35,7 +35,7 @@
 ## Must
 
 - Creating or editing any skill reads `skill-authoring.md` first.
-- Before every Review open, adapt every skill under the current app’s default skills path — `open-review.md` § Preflight.
+- Before `/skills-check` overview, adapt every skill under the current app’s default skills path. Before `/<skill> -review`, adapt **that skill only** — `open-review.md` § Preflight.
 - Bare `/skills-check` then opens the overview; `/<skill> -review` opens that skill’s page — `open-review.md`.
 - This skill is resident: other skills created or updated this turn follow `sync-on-update.md` § Resident.
 - Adopt / retrofit follows `adopt-review.md`.
@@ -53,7 +53,7 @@
 ## Definition of Done
 
 - [ ] Create/update skill work read `skill-authoring.md` first.
-- [ ] Review open ran § Preflight; unadapted skills were fixed before the viewer started.
+- [ ] Review open ran § Preflight (overview = fleet; single page = that skill only); in-scope unadapted skills were fixed before the viewer started.
 - [ ] Intent routed to one of: `skill-authoring.md` / `open-review.md` / `adopt-review.md` / `sync-on-update.md`.
 - [ ] 关联记录 checked + updated when files or `##` headings changed.
 - [ ] Companions aligned (`README.md` / `README.zh.md` / `review-*` / `tag.txt`) or explicitly unchanged with reason.

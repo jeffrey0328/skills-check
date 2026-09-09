@@ -27,7 +27,7 @@ Write only from what you read. Prefer repo-local facts; use **web search** only 
 | `README.md` | Human | English README — **required**; link to `README.zh.md` |
 | `README.zh.md` | Human | Chinese README — **required**; link to `README.md` |
 | `review-intro.md` | Human | Feishu Review **简介** only — short Chinese blurb (overview + detail header) |
-| `review-body.md` | Human | Feishu Review **能做什么** / **执行步骤** (`## 能做什么`, `## 执行步骤`; **Chinese**). Split 能做什么 only when jobs are loosely related. Every item has a matching `###` — even one step |
+| `review-body.md` | Human | Feishu Review **功能描述** / **执行步骤** (`## 能做什么` = 功能描述, `## 执行步骤`; **Chinese**). 功能描述 = the feature itself + standing rules + details. 执行步骤 = what each step does. Do not repeat 命令, 执行步骤, or 人类页 (README / Review companions) in 功能描述. Split 能做什么 only when jobs are loosely related. Each item is `- **标签**：` plus a nested bullet list (one fact per line). Every item has a matching `###` — even one step |
 | `review-usage.md` | Human | Feishu Review **使用方法** (one sentence) + **功能** — what a person types / says / clicks. No `description` dump, no `scripts/*` inventory |
 | `tag.txt` | Human / Review | Display tags |
 | `examples/` | Both | Layer-3 cases (see **Three layers**) |
@@ -141,14 +141,15 @@ Include at minimum (split across those four blocks):
 - `README.md`: English human page — **required companion** (missing, no link to `README.zh.md`, or wrong section order = 缺件).
 - `README.zh.md`: Chinese human page — **required companion** (missing, no link to `README.md`, or wrong section order = 缺件).
 - `review-intro.md`: **Chinese** one short plain-text paragraph for Feishu Review overview/detail 简介 (dedicated file; not English `description` / README). No Markdown markers (`**bold**`, `` `code` ``) — overview shows the text as-is.
-- `review-body.md`: **Chinese** `## 能做什么` and `## 执行步骤` (viewer reads these only; English `description` must not fill 能做什么). **执行步骤** is last on the Review page (after 怎么用). Split 能做什么 only when two jobs are loosely related. Same job with different modules or stages stays one item (e.g. UE C++ + PCG + Landscape = 写 UE C++). Every 能做什么 item has a matching `###` under `## 执行步骤` — even a single step. Viewer accepts **only** `## 执行步骤` — not `## 功能怎么执行`.
+- `review-body.md`: **Chinese** `## 能做什么` and `## 执行步骤` (viewer reads these only; English `description` must not fill 能做什么). On the Review page, `## 能做什么` is shown as **功能描述** (the feature itself, standing rules, feature details). **执行步骤** (执行规范) is last — what each step does (`先` / `再` / `然后`). Do not put slash commands, 「说：」triggers, step sequences, or 人类页 (README / Review companions) into 功能描述; those live in `review-usage.md` **功能**, `## 执行步骤`, and the authoring spec. Split 能做什么 only when two jobs are loosely related. Same job with different modules or stages stays one item (e.g. UE C++ + PCG + Landscape = 写 UE C++). Each 能做什么 item is `- **标签**：` then a **nested bullet list** — one fact per line; do not pack several facts into one paragraph after `：`. A single short fact may stay on the same line. Every 能做什么 item has a matching `###` under `## 执行步骤` — even a single step. Viewer accepts **only** `## 执行步骤` — not `## 功能怎么执行`.
 - `review-usage.md` / human Review UI: **Chinese** default. `## 使用方法` (no `###`) is **one sentence**: 常驻写「常驻，不需要 @skill，也不需要用户或关键词触发。」；非常驻写「对话里 `@<name>`，或提到 / 说 …」；`@<name>` 和每个关键词都用 code span。No labeled rows, no example sentences. `## 功能` + `### <能做什么标题>` + `####` 命令 / 参数 / 脚本 / 工具 = what the person types. Do not nest another「功能」heading. Table columns are 命令/参数/脚本/工具 + 说明. Do not copy frontmatter `description`. Do not list agent-only scripts. Install-to-other-agent lives only in the README Install prompt.
 
 **Feishu Review prose (`review-intro` / `review-body` / `review-usage`) — bold**
 
 | Do | Do not |
 |----|--------|
-| Bold **only the lead label** before `：` on list items, same pattern every line — e.g. `- **路由**：正文` / `1. **开场**：正文` | Mid-sentence bold for emphasis (`仅在…时`、`不`、`Must` 等) |
+| Bold **only the lead label** before `：` on list items, same pattern every line — e.g. `- **路由**：` then nested `- 事实` / `1. **开场**：正文` | Mid-sentence bold for emphasis (`仅在…时`、`不`、`Must` 等) |
+| 能做什么 / 功能描述: nested bullets under each `- **标签**：` (one fact per line) — feature + rules + details | Pack the item into one paragraph after `：`; copy 命令 or 执行步骤 (`先`/`再`/`然后`, slash commands); list 人类页 (README / Review 配套) |
 | Use `` `code` `` for paths, flags, filenames, type names | Mix: some bullets bold lead, some bold nowhere, some bold mid-line |
 | `review-intro.md`: plain text, **no** `**bold**` (overview escapes as plain) | Bold inside intro |
 
@@ -206,7 +207,7 @@ Forbidden names (any capitalization or spacing): Cursor, Claude Code, ClaudeCode
 
 The install prompt says「某一个 Agent 产品」, not an agent app name.
 
-This section is the ban list (needed so the checker can name what is forbidden). CSS `cursor:` in stylesheets is the CSS property, not an agent app name.
+This section is the ban list (needed so the checker can name what is forbidden). CSS `cursor:` in stylesheets is the CSS property, not an agent app name. A git host (`origin.cursor.com`, `cursor.com`), a hyphenated command or record id (`/push-cursor`, `cursor-config`), or a git remote name written as a code span or after `add ` / `-u `, is a host/CLI identifier, not an agent app name.
 
 ## Auto-invocation decision (required when creating)
 
@@ -307,7 +308,7 @@ After changing workflow, constraints, triggers, examples, or layout, check:
 - **`README.zh.md`**: Chinese; `[English](README.md)` after the title; same order with `## 安装` and the **Chinese** prompt, then 功能介绍 / 怎么用 / 常见改动. Same facts as `README.md`.
 - **`常见改动` rows**: if this change added or moved a knob a user would ask to change (norms, checking standards, data store, output paths, triggers), update the row in **both** READMEs.
 - **`review-intro.md`**: Chinese one-line/paragraph 简介（纯文本，无 Markdown 标记）。
-- **`review-body.md`**: Chinese `## 能做什么` / `## 执行步骤`（执行步骤在页面最下；相关度低才拆项；每项都有对应 `###`，一步也写；加粗仅条目标签；见上表）。
+- **`review-body.md`**: Chinese `## 能做什么`（页面标题 **功能描述**：功能本身、规则、细节；不写命令、不写执行步骤、不写人类页）/ `## 执行步骤`（执行规范：每一步干什么；页面最下；相关度低才拆项；每项 `- **标签**：` 下用子列表，不要写成一段；每项都有对应 `###`，一步也写；加粗仅条目标签；见上表）。
 - **`review-usage.md`**: `## 使用方法` = 一句话怎么调用（常驻 / `@` / 关键词，见 § Language）；`## 功能` + `### <能做什么标题>` + `####` 命令/参数/脚本/工具；**overview command only on `skills-check`’s Review page** (other skills: agent `SKILL.md` `-review` only — see **Review flags**); no agent-only script list, no `## description 内容`; same bold rule as body.
 - **Wording:** do not use a specific agent app name. Write **the current agent app**, **Agent**, or **the agent** — § Agent-app names.
 - **`tag.txt`**: one-line display tag (see **Tag** above).

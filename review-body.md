@@ -1,9 +1,19 @@
 ## 能做什么
 
-- **Skill 规范**：创建或编辑任何 skill 时，先读本 skill 的 `references/skill-authoring.md`。人类页：英文 `README.md` 与中文 `README.zh.md` 互相入口，排版简介 → 安装 → 具体内容 → 其他；安装是通过 Agent 的一段提示词（仓库地址 + 步骤），英文页用英文、中文页用中文。Review 页是 `review-intro.md`（中文纯文本简介）、`review-body.md`（能做什么 / 执行步骤）、`review-usage.md`（使用方法一句话 + 功能只挂命令/参数/脚本/工具）。不要用具体 Agent 应用名，写成当前 Agent / Agent。缺一份、缺入口、缺安装提示词或顺序不对记为缺件。
-- **打开 Review**：`/skills-check` 打开 Skills 总览（先体检全部 skill），`/<skill> -review` 打开该 skill 单页（只体检这一个）；需关注或缺件时可点「复制提示词」。
-- **在总览页管标签**：标签下拉可勾选多个，带其中任一标签的 skill 会显示；卡片右键「编辑标签」直接改该 skill 的标签，保存即写入并刷新。
-- **接入 Review**：按清单给未适配的 skill 补人类页和 `-review`；本 skill 常驻，其他 skill 被改时会同步人类页。
+- **Skill 规范**：
+  - 管每个 skill 必须怎么写：形态规范在 `references/skill-authoring.md`
+  - 不要用具体 Agent 应用名，写成当前 Agent / Agent
+- **打开 Review**：
+  - 两种页面：Skills 总览，和单个 skill 的 Review
+  - 总览体检并适配当前 Agent 默认 skills 路径下的全部 skill；单页只体检、只补这一个
+  - 需关注或缺件时，标题栏下列问题，可复制修复提示词去粘贴
+- **在总览页管标签**：
+  - 总览可以按标签筛选，多选为任一命中
+  - 改标签写入该 skill 的 `tag.txt`，卡片和筛选立刻刷新；清空则删除该文件
+- **接入 Review**：
+  - 给还没接入的 skill 补齐 Review 配套和它自己的 `-review`
+  - 只从该 skill 已有文件抽取，不编造流程
+  - 本 skill 常驻，其他 skill 被改时会同步配套
 
 ## 执行步骤
 

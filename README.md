@@ -44,6 +44,8 @@ Say one of these to the agent; it finds and edits the right file itself.
 | The skill-authoring norms (how any skill must be written) | “Change the skill-authoring norms: `<new requirement>`, and roll it out to every skill” |
 | The Review checking standards (what counts as 缺件 vs 需关注) | “Add a Review check: `<rule>`, and treat it as 缺件 / 需关注” |
 | What one skill’s Review page says (简介 / 能做什么 / 使用方法) | “Change `<skill>`’s Review 简介 to `<text>`” |
+| How Review「能做什么」is laid out | “Write 能做什么 as a bullet list, not a paragraph” |
+| How「功能描述」vs「执行步骤」split | “功能描述 is the feature and its rules; 执行步骤 is what each step does; don’t repeat commands or steps” |
 | The tag shown on a skill’s card | Right-click that card on the overview and pick 编辑标签; or say “Change `<skill>`’s tag to `<tag>`” |
 | Which tags the vocabulary offers | “Add `<tag>` to the tag vocabulary and drop `<old tag>`” |
 | Where Review opens (built-in vs external browser, port) | “Open Review in the external browser” / “Use port `<n>` for Review” |

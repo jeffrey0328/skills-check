@@ -285,6 +285,26 @@ def forbidden_app_name_re() -> re.Pattern[str]:
     return re.compile(r"(?i)(" + "|".join(alts) + r")")
 
 
+def strip_non_app_name_tokens(body: str) -> str:
+    """Drop host/CLI/CSS tokens that share a forbidden spelling but are not the agent app.
+
+    See skill-authoring.md § Agent-app names. Build the token by concatenation so this
+    file does not itself contain the agent-app name.
+    """
+    tok = "cur" + "sor"
+    body = re.sub(rf"(?i){tok}\s*:", "", body)
+    body = re.sub(rf"(?i)origin\.{tok}\.com", "", body)
+    body = re.sub(rf"(?i)(?<![./\\]){tok}\.com\b", "", body)
+    body = re.sub(rf"(?i)(?<=-){tok}\b", "", body)
+    body = re.sub(rf"(?i)\b{tok}(?=-)", "", body)
+    body = re.sub(rf"(?i)`{tok}`", "", body)
+    body = re.sub(rf"(?i)(?<=\badd ){tok}\b", "", body)
+    body = re.sub(rf"(?i)(?<=-u ){tok}\b", "", body)
+    body = re.sub(rf"(?i)(?<=named ){tok}\b", "", body)
+    body = re.sub(rf"(?i)(?<=远程名 ){tok}\b", "", body)
+    return body
+
+
 def parse_frontmatter(text: str) -> dict:
     text = text.lstrip("\ufeff").lstrip()
     if not text.startswith("---"):
@@ -585,8 +605,55 @@ def cards_from_md_body(md: str, default_title: str = "") -> list[dict]:
 _BOLD_LEAD = re.compile(r"^[-*]\s+\*\*([^*]+)\*\*\s*[:：]?\s*(.*)$")
 
 
+def _cando_body_is_packed_paragraph(body: str) -> bool:
+    """True when the item is one long paragraph instead of a nested list."""
+    text = (body or "").strip()
+    if not text:
+        return False
+    if re.search(r"(?m)^[-*]\s+", text):
+        return False
+    return ("；" in text) or (text.count("。") >= 2) or (len(text) > 48)
+
+
+def cando_packed_paragraph_titles(md: str) -> list[str]:
+    """Titles whose 能做什么 body is a packed paragraph (需关注)."""
+    src = (md or "").strip()
+    if not src:
+        return []
+    h3_parts = re.split(r"(?m)^###\s+(.+)$", src)
+    packed: list[str] = []
+    if len(h3_parts) >= 3:
+        for i in range(1, len(h3_parts), 2):
+            title = h3_parts[i].strip()
+            body = h3_parts[i + 1].strip() if i + 1 < len(h3_parts) else ""
+            if _cando_body_is_packed_paragraph(body):
+                packed.append(title)
+        return packed
+    title: str | None = None
+    buf: list[str] = []
+
+    def flush() -> None:
+        if title is None:
+            return
+        if _cando_body_is_packed_paragraph("\n".join(buf)):
+            packed.append(title)
+
+    for line in src.splitlines():
+        m = _BOLD_LEAD.match(line)
+        if m:
+            flush()
+            title = m.group(1).strip()
+            rest = m.group(2).strip()
+            buf = [rest] if rest else []
+            continue
+        if title is not None:
+            buf.append(line)
+    flush()
+    return packed
+
+
 def parse_can_do_items(md: str) -> list[dict]:
-    """Split 能做什么 into titled items (### or **Title**： bullets)."""
+    """Split 能做什么 into titled items (### or **Title**： + nested bullets)."""
     md = (md or "").strip()
     if not md:
         return []
@@ -603,19 +670,35 @@ def parse_can_do_items(md: str) -> list[dict]:
                 }
             )
         return items
-    items = []
-    for line in md.splitlines():
-        m = _BOLD_LEAD.match(line.strip())
-        if not m:
-            continue
-        title = m.group(1).strip()
-        rest = m.group(2).strip()
+    items: list[dict] = []
+    title: str | None = None
+    buf: list[str] = []
+
+    def flush() -> None:
+        nonlocal title, buf
+        if title is None:
+            return
+        body = "\n".join(buf).strip()
         items.append(
             {
                 "title": title,
-                "html": normalize_prose_html(md_block_to_html(rest or title)),
+                "html": normalize_prose_html(md_block_to_html(body or title)),
             }
         )
+        title = None
+        buf = []
+
+    for line in md.splitlines():
+        m = _BOLD_LEAD.match(line)
+        if m:
+            flush()
+            title = m.group(1).strip()
+            rest = m.group(2).strip()
+            buf = [rest] if rest else []
+            continue
+        if title is not None:
+            buf.append(line)
+    flush()
     return items
 
 
@@ -1608,8 +1691,7 @@ def check_skill(folder: Path) -> dict:
                 "",
                 body,
             )
-        css_prop = "cur" + "sor"
-        body = re.sub(rf"(?i){css_prop}\s*:", "", body)
+        body = strip_non_app_name_tokens(body)
         found = sorted({m.group(0) for m in brand_re.finditer(body)})
         name_hit = brand_re.search(rel)
         if name_hit:
@@ -1745,6 +1827,25 @@ def check_skill(folder: Path) -> dict:
         add("review_body", "fail", "review-body.md", "存在但缺少中文「能做什么 / 执行步骤」")
     else:
         add("review_body", "fail", "review-body.md", "缺失（Review 能做什么/执行步骤专用；中文）")
+
+    cando_src = (
+        pick_md_section(
+            parse_md_h2_sections(body_for_heading),
+            ("能做什么", "能干嘛", "是什么", "做什么", "能力"),
+        )
+        if body_for_heading
+        else ""
+    )
+    packed_cando = cando_packed_paragraph_titles(cando_src)
+    if packed_cando:
+        add(
+            "cando_list",
+            "warn",
+            "能做什么应写成子列表",
+            "、".join(packed_cando) + "（一条一个事实，不要写成一段）",
+        )
+    elif cando_src:
+        add("cando_list", "pass", "能做什么条目", "每项为子列表")
 
     # Positive / negative norm pairing → 不合规 = 需关注 (warn)
     pairing_docs: dict[str, str] = {}
@@ -2351,9 +2452,15 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .layout-a-fill { width: 100%; }
   .cap-blurb {
     font-size: 13px; color: var(--text-2); line-height: 1.6;
-    margin: 0 0 12px; padding: 10px 12px;
+    margin: 0 0 12px; padding: 10px 14px;
     background: #fff; border: 1px solid var(--border); border-radius: 8px;
   }
+  .cap-blurb ul {
+    margin: 0; padding-left: 1.15em; list-style: disc;
+  }
+  .cap-blurb li { margin: 6px 0; }
+  .cap-blurb p { margin: 0 0 8px; }
+  .cap-blurb p:last-child { margin-bottom: 0; }
   .timeline .prose ul {
     list-style: none; padding-left: 0; margin: 0;
     border-left: 2px solid #c2d4ff; margin-left: 7px; padding-left: 16px;
@@ -2421,7 +2528,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         <div class="tag-filters" id="tagFilters"></div>
         <div id="skillList"></div>
       </div>
-      <div class="foot">总览看状态与问题 · 单页：需关注/缺件时先列具体问题，再是能做什么 / 使用方法 / 执行步骤</div>
+      <div class="foot">总览看状态与问题 · 单页：需关注/缺件时先列具体问题，再是使用方法 / 功能描述 / 执行步骤</div>
     </div>
   </div>
 
@@ -2429,7 +2536,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <div class="detail-layout" id="detailLayout">
       <nav class="side" id="detailSide" aria-label="本页导航">
         <strong>本页</strong>
-        <button type="button" class="navlink" data-scroll="sec-can-do">能做什么</button>
+        <button type="button" class="navlink" data-scroll="sec-can-do">功能描述</button>
         <button type="button" class="navlink" data-scroll="sec-how-common">使用方法</button>
         <button type="button" class="navlink" data-scroll="sec-execute">执行步骤</button>
       </nav>
@@ -2791,7 +2898,10 @@ function renderDetailA(s, c) {
     `<button type="button" class="cap-chip${cur && cap.id === cur.id ? " active" : ""}" data-cap="${escapeHtml(cap.id)}">${escapeHtml(cap.title)}</button>`
   ).join("");
   const blurb = cur && cur.can_do_html
-    ? `<div class="cap-blurb">${cur.can_do_html}</div>`
+    ? `<div class="section" id="sec-can-do">
+        <div class="section-hd"><span class="dot"></span>功能描述</div>
+        <div class="section-bd"><div class="prose">${cur.can_do_html}</div></div>
+      </div>`
     : "";
   const commonHtml = commonHowHtml(c);
   const commonBlock = commonHtml

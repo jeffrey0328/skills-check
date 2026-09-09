@@ -112,14 +112,14 @@ python "<skills-check>/scripts/skills-check-viewer.py" --write-open-scripts --pr
 | View | Hash | Content |
 |------|------|---------|
 | **Overview** | `#/` | Summary cards + each skill’s status, issues, one-line intro. Status filter row, then a **tag dropdown** (multi-check = 任一命中). 「清除筛选」clears status + tags. **Right-click a card** → 编辑标签 / 进入 Review 页 / 复制修复提示词 |
-| **Single skill** | `#/skill/<folder>` | 状态为需关注/缺件时标题栏下直接列出问题（点「复制提示词」弹窗给出可粘贴的修复说明），再是 **使用方法** / 能力芯片 / **功能** / **执行步骤**；右上角下拉切换 skill |
+| **Single skill** | `#/skill/<folder>` | 状态为需关注/缺件时标题栏下直接列出问题（点「复制提示词」弹窗给出可粘贴的修复说明），再是 **使用方法** / 能力芯片 / **功能描述** / **功能** / **执行步骤**；右上角下拉切换 skill |
 
 **怎么用** is read only from each skill’s **`review-usage.md`**. Structure:
 
 1. `## 使用方法` — one sentence on how to invoke. No `###`.
 2. `## 功能` — under `### <能做什么标题>`, only `####` 命令 / 参数 / 脚本 / 工具. Overview command **only on this skill**. Skip the heading when there are none.
 
-**能做什么 / 执行步骤** come from Chinese **`review-body.md`**. **Overview / detail 简介** comes from **`review-intro.md`**. English frontmatter `description` and the README pair are not used for the human intro. Page order: 使用方法 → 能做什么芯片 → 功能 / 执行步骤.
+**功能描述 / 执行步骤** come from Chinese **`review-body.md`**（`## 能做什么` 在页面上显示为 **功能描述**）。 **Overview / detail 简介** comes from **`review-intro.md`**. English frontmatter `description` and the README pair are not used for the human intro. Page order: 使用方法 → 能做什么芯片 → 功能描述 → 功能 / 执行步骤.
 
 **Fix hook:** 需关注/缺件条目上的「复制提示词」弹出完整修复说明。弹窗里再点「复制提示词」写入剪贴板并关闭，可直接去粘贴。点框外不关闭。不打开编辑器、不切工作区。
 
@@ -132,6 +132,7 @@ File roles and pairing rules: `skill-authoring.md`.
 | Check | Pass | 缺件 (fail) | 需关注 (warn) |
 |-------|------|-------------|----------------|
 | File / role checks | required companions present: `README.md` + `README.zh.md`（互相入口；英文/中文安装提示词；简介→安装→内容→其他）、`review-intro` / `review-body` / `review-usage`；不用具体 Agent 应用名 | missing `README.md` / `README.zh.md` / `review-*` / `tag.txt` / `open-review.ps1`；README 缺另一语入口、缺对应语言的安装提示词或排版顺序不对；出现具体 Agent 应用名 | pairing leftovers, examples, description length |
+| **能做什么条目** | 页面「功能描述」：功能本身、规则、细节；每项子列表；不重复命令/执行步骤，不写人类页 | — | 标签后写成一段；或把 slash 命令、`先`/`再`/`然后`、人类页清单写进功能描述 |
 | **README 面向用户** | 具体内容只有 功能介绍 + 怎么用（你说什么 → 会发生什么）+ 常见改动（想改什么 → 对 Agent 说的一句话） | — | README 残留文件角色 / 目录清单表或 `何时` / `怎么调用` / `What it does` 之类多余小节；缺 `功能介绍` / `怎么用` / `常见改动` |
 | **肯定/否定配对** | 无否定句，或每条 Must not 与某条 Must 有包含/重合（或显式 `← Must`） | — | 否定句缺少重合肯定句；README/正文里冗余括号否定 |
 

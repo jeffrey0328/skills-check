@@ -17,7 +17,7 @@
 | `README.md` | Human | English README：简介 → `## Install`（英文 Agent 提示词：仓库 + Steps）→ `## Features` → `## How to use` → `## Common changes`；链到 `README.zh.md` |
 | `README.zh.md` | Human | Chinese README：简介 → `## 安装`（中文 Agent 提示词：仓库 + 步骤）→ 功能介绍 → 怎么用 → 常见改动；链到 `README.md` |
 | `review-intro.md` | Human | Feishu Review 简介（中文纯文本，无 Markdown 标记） |
-| `review-body.md` | Human | 能做什么 / 执行步骤（中文；执行步骤在页面最下；每项有 `###`） |
+| `review-body.md` | Human | 功能描述（`## 能做什么`：功能本身、规则、细节）/ 执行步骤（每一步干什么；页面最下；每项子列表 + 对应 `###`） |
 | `review-usage.md` | Human | 使用方法（一句话）/ 功能（只挂命令、参数、脚本、工具） |
 | `references/hub-norms.md` | Agent | This file |
 | `references/cross-reference.md` | Agent | 关联记录 |

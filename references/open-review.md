@@ -1,6 +1,6 @@
 # Open Feishu-style Review
 
-**读法:** § Preflight first on every open；§ Overview for `/skills-check` / 总览 / 体检；§ Single for `/<skill> -review`；§ Browser for which window to use；§ Skills root when the skills root needs resolving.
+**读法:** § Preflight first on every open；§ Overview for `/skill-review` (alone) / `/skills-check` / 总览 / 体检；§ Single for `/<skill> /skill-review`；§ Browser for which window to use；§ Skills root when the skills root needs resolving. Global command: `/skill-review`.
 
 ## Skills root
 
@@ -16,8 +16,8 @@ Do this **before** § Overview or § Single. Scope depends on what you are openi
 
 | Open | Scan | Adapt |
 |------|------|-------|
-| `/skills-check` overview | `--print` (all skills) | Every failing skill in the root |
-| `/<skill> -review` single | `--print --skill <folder>` | **Only that skill.** Leave siblings alone. |
+| `/skill-review` (alone) / `/skills-check` overview | `--print` (all skills) | Every failing skill in the root |
+| `/<skill> /skill-review` single | `--print --skill <folder>` | **Only that skill.** Leave siblings alone. |
 
 1. Resolve the skills root (§ Skills root).
 2. Run the matching scan:
@@ -33,11 +33,11 @@ python "<skills-check>/scripts/skills-check-viewer.py" --print --skill "<skill-f
    - missing `README.md` / `README.zh.md` / `review-intro.md` / `review-body.md` / `review-usage.md`
    - README pair missing the other-language entry, missing the agent install prompt (English prompt in `README.md`, Chinese prompt in `README.zh.md`; git URL + steps), or section order is not 简介 → 安装 → 具体内容 → 其他
    - a specific agent app name appears in the skill (write 当前 Agent / Agent instead)
-   - missing `SKILL.md` Commands row `-review`
+   - missing `SKILL.md` Commands row `/skill-review`
    - missing `scripts/open-review.ps1`, or the script does not call `skills-check\scripts\skills-check-viewer.py`
    - missing `tag.txt` (write a short tag from the folder name; tell the user they can rename)
 4. Adapt in-scope failing skills with `references/adopt-review.md` (extract companions from that skill’s existing `SKILL.md` / `README.md`; do not invent domain workflow). Overview: then `--write-open-scripts` once for the root. Single: if that skill’s opener is missing, write **that** `scripts/open-review.ps1` only; do not rewrite every skill.
-5. Re-run the same-scope scan. Open Review only when in-scope required companions and `-review` / opener path pass. Remaining 需关注 (pairing, examples, description length) may stay; mention them in the short summary.
+5. Re-run the same-scope scan. Open Review only when in-scope required companions and `/skill-review` / opener path pass. Remaining 需关注 (pairing, examples, description length) may stay; mention them in the short summary.
 
 If in-scope skills already pass the must-adapt list, skip writes and continue to § Overview or § Single.
 
@@ -45,16 +45,17 @@ If in-scope skills already pass the must-adapt list, skip writes and continue to
 
 | User says | Action |
 |-----------|--------|
-| **`/skills-check`** (no flag) | **Restart** the all-skills overview (kill old viewer → load latest `.py` → open `#/`) |
-| Natural language while this skill is attached: Skills 总览 / review 全部 / 体检 skills | Same as `/skills-check` |
-| **`/<any-skill> -review`** or **`@<any-skill> -review`** | **Restart** that skill’s Review (kill old viewer → load latest `.py` → open `#/skill/<folder>`) |
-| **`/skills-check -review`** | This skill’s own single page (same as any other skill’s `-review`) |
+| **`/skill-review`** (alone) | **Restart** the all-skills overview (kill old viewer → load latest `.py` → open `#/`) |
+| **`/skills-check`** (no flag) | Same as `/skill-review` alone |
+| Natural language while this skill is attached: Skills 总览 / review 全部 / 体检 skills | Same as `/skill-review` alone |
+| **`/<any-skill> /skill-review`** or **`@<any-skill> /skill-review`** | **Restart** that skill’s Review (kill old viewer → load latest `.py` → open `#/skill/<folder>`). Detect the skill from the **user message** `/` `@`, not from resident auto-attach. |
+| **`/skills-check /skill-review`** | This skill’s own single page (same as any other skill’s `/skill-review`) |
 
 **Docs split:**
 
-- **Every** skill: `-review` in **`SKILL.md`** (Agent). That path is unchanged.
-- **Overview entry:** `/skills-check` only. Do not keep `-reviewall` on `jeffrey-workflow-skill` or any other hub.
-- **Feishu Review「怎么用」:** list the overview command **only** on **this** skill (`review-usage.md`). Other skills do not list `-review` / overview on their Review page.
+- **Every** skill: `/skill-review` in **`SKILL.md`** Commands (Agent). With that skill named in the same message → that skill’s page.
+- **Overview entry:** global command **`/skill-review`** (alone). `/skills-check` with no extra skill name is the same overview. Do not keep `-reviewall` on `jeffrey-workflow-skill` or any other hub.
+- **Feishu Review「怎么用」:** list the overview command **only** on **this** skill (`review-usage.md`). Other skills do not list `/skill-review` / overview on their Review page.
 
 ## Browser
 
@@ -72,7 +73,7 @@ Serves local HTTP (default **http://127.0.0.1:18765/**), hash `#/`.
 
 | Action | What updates |
 |--------|----------------|
-| **`/skills-check` or `/<skill> -review`** (start viewer) | **Restarts** Review: ends old `skills-check-viewer` processes, loads **latest `.py`**, rescans skills, opens browser (same port when possible) |
+| **`/skill-review` or `/skills-check`** (start viewer) | **Restarts** Review: ends old `skills-check-viewer` processes, loads **latest `.py`**, rescans skills, opens browser (same port when possible) |
 | **Browser refresh** | Re-scans skill files only — **does not** reload viewer Python code |
 
 Ctrl+C stops the server.
@@ -112,7 +113,7 @@ python "<skills-check>/scripts/skills-check-viewer.py" --write-open-scripts --pr
 | View | Hash | Content |
 |------|------|---------|
 | **Overview** | `#/` | Summary cards + each skill’s status, issues, one-line intro. Status filter row, then a **tag dropdown** (multi-check = 任一命中). 「清除筛选」clears status + tags. **Right-click a card** → 编辑标签 / 进入 Review 页 / 复制修复提示词 |
-| **Single skill** | `#/skill/<folder>` | 状态为需关注/缺件时标题栏下直接列出问题（点「复制提示词」弹窗给出可粘贴的修复说明），再是 **使用方法** / 能力芯片 / **功能描述** / **功能** / **执行步骤**；右上角下拉切换 skill |
+| **Single skill** | `#/skill/<folder>` | 状态为需关注/缺件时标题栏下直接列出问题（点「复制提示词」弹窗给出可粘贴的修复说明；需关注可点「忽略」），再是 **使用方法** / 能力芯片 / **功能描述** / **功能** / **执行步骤**；右上角下拉切换 skill |
 
 **怎么用** is read only from each skill’s **`review-usage.md`**. Structure:
 
@@ -122,6 +123,8 @@ python "<skills-check>/scripts/skills-check-viewer.py" --write-open-scripts --pr
 **功能描述 / 执行步骤** come from Chinese **`review-body.md`**（`## 能做什么` 在页面上显示为 **功能描述**）。 **Overview / detail 简介** comes from **`review-intro.md`**. English frontmatter `description` and the README pair are not used for the human intro. Page order: 使用方法 → 能做什么芯片 → 功能描述 → 功能 / 执行步骤.
 
 **Fix hook:** 需关注/缺件条目上的「复制提示词」弹出完整修复说明。弹窗里再点「复制提示词」写入剪贴板并关闭，可直接去粘贴。点框外不关闭。不打开编辑器、不切工作区。
+
+**Ignore hook:** 需关注条目上的「忽略」写入本 skill 的 `review-ignored.json`（按检查 id + 原文记住这一条）。之后总览和单页都不再列出；该 skill 若只剩被忽略的需关注、没有缺件，状态变为通过。缺件没有忽略按钮。写入走 `POST /api/ignore`，鉴权与 `/api/tag` 相同。同一条检查如果原文变了会再出现。
 
 **Tag hook:** 总览卡片右键 →「编辑标签」弹窗（当前标签可 ✕ 删、候选点一下加入、输入框回车新建）→「保存」直接写该 skill 的 `tag.txt` 并刷新卡片与筛选；清空则删除 `tag.txt`。写入走 `POST /api/tag`，只认本次会话 token、拒绝跨站与 skills 根目录之外的路径。候选与词表：`skill-authoring.md` § Tag。
 
@@ -140,18 +143,21 @@ Violations of the pairing rule are **需关注**, not 缺件. A missing README f
 
 ## Must
 
-- Run § Preflight on every Review open: overview adapts the fleet; `/<skill> -review` adapts **that skill only**.
+- Run § Preflight on every Review open: `/skill-review` alone adapts the fleet; `/<skill> /skill-review` adapts **that skill only**.
 - Edit that skill’s `review-usage.md` when「怎么用」needs changes.
 - Write「怎么用」only as what a person types / says / clicks. Scripts stay under `scripts/` for the agent.
 - Show the overview command on Feishu Review **only** for `skills-check`.
 - Default open to the agent's built-in browser: viewer `--no-browser`, then `open_resource`. *(see § Browser)*
+- Persist ignored 需关注 via `POST /api/ignore` into this skill’s `review-ignored.json` (id + 原文). *(see § Views · Ignore hook)*
 
 ## Must not
 
 - Invent「怎么用」正文. *(← Must: edit review-usage.md)*
 - Put `description` 原文 or a script inventory on「怎么用」. *(← Must: 怎么用 = what the person types / says / clicks)*
-- List overview / `-review` on other skills’ Feishu Review pages. *(← Must: overview only on this skill’s Review)*
+- List overview / `/skill-review` on other skills’ Feishu Review pages. *(← Must: overview only on this skill’s Review)*
 - Open the Review page in the external browser by default. *(← Must: default to built-in browser)*
-- Keep or revive `-reviewall` on `jeffrey-workflow-skill`. *(← Must: overview is `/skills-check`)*
+- Keep or revive `-reviewall` on `jeffrey-workflow-skill`. *(← Must: overview is `/skill-review`)*
 - Open Review while an **in-scope** skill still fails the must-adapt list. *(← Must: Preflight first)*
-- On `/<skill> -review`, adapt or block on sibling skills. *(← Must: single-page preflight is that skill only)*
+- On `/<skill> /skill-review`, adapt or block on sibling skills. *(← Must: single-page preflight is that skill only)*
+- Treat resident auto-attach as the skill named for `/skill-review`. *(← Must: detect `/` `@` from the user message)*
+- Put an 忽略 button on 缺件. *(← Must: persist ignored 需关注)*

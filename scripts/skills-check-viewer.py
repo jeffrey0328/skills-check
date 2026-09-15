@@ -9,7 +9,7 @@
 
 对照 skill-authoring 规范做健康检查（只读，不改文件）。
 
-/skills-check 或 /<skill> -review（本脚本启动）会先结束旧 Review 进程再加载最新 .py，并尽量占用 18765。
+/skill-review 或 /<skill> /skill-review（本脚本启动）会先结束旧 Review 进程再加载最新 .py，并尽量占用 18765。
 浏览器刷新只重扫 skill 文件，不重载本脚本。
 
 用法:
@@ -54,6 +54,8 @@ LARGE_SKILL_LINES = 180
 VIEWER_PROC_MARK = "skills-check-viewer"
 # Shared tag vocabulary (candidates for the overview tag editor / filter)
 TAG_VOCAB_PATH = Path(__file__).resolve().parent.parent / "tag-vocab.txt"
+IGNORE_PATH = Path(__file__).resolve().parent.parent / "review-ignored.json"
+MAX_IGNORED_PER_SKILL = 200
 MAX_TAGS_PER_SKILL = 8
 MAX_TAG_VOCAB = 200
 MAX_TAG_LEN = 24
@@ -1679,7 +1681,10 @@ def check_skill(folder: Path) -> dict:
         if skip_dir & set(p.parts):
             continue
         rel = str(p.relative_to(folder)).replace("\\", "/")
-        if p.name.startswith("_strip-"):
+        if p.name.startswith("_strip-") or p.name in {
+            "review-ignored.json",
+            "review-ignored.json.tmp",
+        }:
             continue
         try:
             body = p.read_text(encoding="utf-8", errors="replace")
@@ -1716,12 +1721,12 @@ def check_skill(folder: Path) -> dict:
     else:
         add("review_html", "pass", "review.html", "已不使用（正确）")
 
-    if re.search(r"(?m)^\s*\|\s*`?-review`?", skill_text) or re.search(
-        r"(?m)^#+\s+.*-review\b", skill_text
+    if re.search(r"(?m)^\s*\|\s*`/?skill-review`", skill_text) or re.search(
+        r"(?m)^#+\s+.*skill-review\b", skill_text
     ):
-        add("review_flag", "pass", "SKILL.md -review", "Commands 含 -review")
+        add("review_flag", "pass", "SKILL.md /skill-review", "Commands 含 /skill-review")
     else:
-        add("review_flag", "fail", "SKILL.md -review", "缺失（打开本页入口）")
+        add("review_flag", "fail", "SKILL.md /skill-review", "缺失（打开本页入口）")
 
     open_script = folder / "scripts" / "open-review.ps1"
     if open_script.is_file():
@@ -1882,7 +1887,11 @@ def check_skill(folder: Path) -> dict:
         status = "pass"
 
     issues = [
-        {"level": c["level"], "text": f'{c["title"]} — {c["detail"]}'}
+        {
+            "id": c["id"],
+            "level": c["level"],
+            "text": f'{c["title"]} — {c["detail"]}',
+        }
         for c in checks
         if c["level"] in ("warn", "fail")
     ]
@@ -1972,6 +1981,116 @@ def write_skill_tags(root: Path, folder: str, tags: list[str]) -> list[str]:
     return clean
 
 
+def _assert_skill_folder(root: Path, folder: str) -> Path:
+    if not isinstance(folder, str) or not folder.strip():
+        raise ValueError("folder 缺失")
+    if folder != Path(folder).name or folder in {".", ".."}:
+        raise ValueError("folder 非法")
+    target = (root / folder).resolve()
+    if target.parent != root.resolve():
+        raise ValueError("folder 超出 skills 根目录")
+    if not target.is_dir() or not (target / "SKILL.md").is_file():
+        raise ValueError("不是 skill 目录")
+    return target
+
+
+def read_ignored() -> dict[str, list[dict]]:
+    if not IGNORE_PATH.is_file():
+        return {}
+    try:
+        raw = json.loads(IGNORE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, list[dict]] = {}
+    for folder, entries in raw.items():
+        if not isinstance(folder, str) or not isinstance(entries, list):
+            continue
+        kept: list[dict] = []
+        for item in entries:
+            if not isinstance(item, dict):
+                continue
+            cid = item.get("id")
+            text = item.get("text")
+            if isinstance(cid, str) and cid.strip() and isinstance(text, str) and text.strip():
+                kept.append({"id": cid.strip(), "text": text.strip()})
+        if kept:
+            out[folder] = kept[:MAX_IGNORED_PER_SKILL]
+    return out
+
+
+def write_ignored(data: dict[str, list[dict]]) -> None:
+    tmp = IGNORE_PATH.with_suffix(".json.tmp")
+    tmp.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    os.replace(tmp, IGNORE_PATH)
+
+
+def ignore_skill_warn(root: Path, folder: str, cid: object, text: object) -> None:
+    """Record one 需关注 so the Review page stops listing it."""
+    _assert_skill_folder(root, folder)
+    if not isinstance(cid, str) or not cid.strip():
+        raise ValueError("id 缺失")
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError("text 缺失")
+    cid = cid.strip()
+    text = text.strip()
+    sk = check_skill(root / folder)
+    hit = next(
+        (
+            i
+            for i in sk.get("issues", [])
+            if i.get("level") == "warn" and i.get("id") == cid and i.get("text") == text
+        ),
+        None,
+    )
+    if not hit:
+        raise ValueError("没有这条需关注")
+    ignored = read_ignored()
+    entries = ignored.setdefault(folder, [])
+    if any(e.get("id") == cid and e.get("text") == text for e in entries):
+        return
+    if len(entries) >= MAX_IGNORED_PER_SKILL:
+        raise ValueError("忽略条数已满")
+    entries.append({"id": cid, "text": text})
+    write_ignored(ignored)
+
+
+def apply_ignored_warns(skills: list) -> None:
+    ignored = read_ignored()
+    if not ignored:
+        return
+    for s in skills:
+        keys = {
+            (e.get("id"), e.get("text"))
+            for e in ignored.get(s["folder"], [])
+            if isinstance(e, dict)
+        }
+        if not keys:
+            continue
+        before = s.get("issues") or []
+        kept = [
+            i
+            for i in before
+            if not (i.get("level") == "warn" and (i.get("id"), i.get("text")) in keys)
+        ]
+        dropped = sum(1 for i in before if i.get("level") == "warn") - sum(
+            1 for i in kept if i.get("level") == "warn"
+        )
+        if not dropped:
+            continue
+        s["issues"] = kept
+        s["counts"]["warn"] = max(0, int(s["counts"].get("warn") or 0) - dropped)
+        if s["counts"].get("fail"):
+            s["status"] = "fail"
+        elif s["counts"]["warn"]:
+            s["status"] = "warn"
+        else:
+            s["status"] = "pass"
+
+
 def _skill_summary(skills: list) -> dict:
     return {
         "total": len(skills),
@@ -1999,6 +2118,7 @@ def filter_scan_to_folder(data: dict, folder: str) -> dict:
 
 def scan_skills(root: Path) -> dict:
     skills = [check_skill(d) for d in list_skill_dirs(root)]
+    apply_ignored_warns(skills)
     summary = _skill_summary(skills)
     used: dict[str, int] = {}
     for s in skills:
@@ -2208,6 +2328,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .issue-line.fail { background: var(--fail-soft); color: #c12424; }
   .issue-line .tag { font-weight: 700; flex: 0 0 auto; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
   .issue-line .issue-text { flex: 1; min-width: 0; }
+  .issue-line .issue-actions { display: flex; flex: 0 0 auto; gap: 6px; }
   .fix-btn {
     flex: 0 0 auto;
     font-size: 11px; font-weight: 650;
@@ -2218,6 +2339,15 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   button.fix-btn { border: none; cursor: pointer; font-family: inherit; }
   button.fix-btn:disabled { opacity: .65; cursor: wait; }
   .fix-btn:hover { filter: brightness(1.06); }
+  .ignore-btn {
+    font-size: 11px; font-weight: 650;
+    padding: 2px 8px; border-radius: 999px;
+    background: #fff; color: #a34d00;
+    border: 1px solid #e8c39a;
+    cursor: pointer; font-family: inherit; line-height: 1.4;
+  }
+  .ignore-btn:hover { background: var(--warn-soft); }
+  .ignore-btn:disabled { opacity: .65; cursor: wait; }
   .problems-block .problems-hd {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
@@ -2638,7 +2768,10 @@ function buildFixPrompt(s, issue) {
 function issueLineHtml(s, issue) {
   const tag = issue.level === "fail" ? "缺件" : "需关注";
   const prompt = encodeURIComponent(buildFixPrompt(s, issue));
-  return `<div class="issue-line ${issue.level}"><span class="tag">${tag}</span><span class="issue-text">${escapeHtml(issue.text)}</span><button type="button" class="fix-btn" data-prompt="${prompt}">复制提示词</button></div>`;
+  const ignore = issue.level === "warn"
+    ? `<button type="button" class="ignore-btn" data-folder="${encodeURIComponent(s.folder)}" data-id="${encodeURIComponent(issue.id || "")}" data-text="${encodeURIComponent(issue.text || "")}">忽略</button>`
+    : "";
+  return `<div class="issue-line ${issue.level}"><span class="tag">${tag}</span><span class="issue-text">${escapeHtml(issue.text)}</span><span class="issue-actions"><button type="button" class="fix-btn" data-prompt="${prompt}">复制提示词</button>${ignore}</span></div>`;
 }
 function findSkill(folder) {
   return (DATA.skills || []).find((s) => s.folder === folder) || null;
@@ -2792,7 +2925,7 @@ function renderOverview() {
         ${countBadge}
       </div>`;
     btn.addEventListener("click", (ev) => {
-      if (ev.target.closest(".fix-btn")) return;
+      if (ev.target.closest(".fix-btn") || ev.target.closest(".ignore-btn")) return;
       goSkill(s.folder);
     });
     btn.addEventListener("contextmenu", (ev) => {
@@ -3145,6 +3278,32 @@ async function saveTagDraft() {
   }
 }
 
+async function ignoreWarn(btn) {
+  const folder = decodeURIComponent(btn.getAttribute("data-folder") || "");
+  const id = decodeURIComponent(btn.getAttribute("data-id") || "");
+  const text = decodeURIComponent(btn.getAttribute("data-text") || "");
+  if (!folder || !id || !text) return;
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/ignore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Skills-Check-Token": WRITE_TOKEN },
+      body: JSON.stringify({ folder: folder, id: id, text: text }),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok || !out.ok) {
+      btn.disabled = false;
+      window.alert(out.error || ("忽略失败：HTTP " + r.status));
+      return;
+    }
+    if (out.data && Array.isArray(out.data.skills)) DATA = out.data;
+    route();
+  } catch (e) {
+    btn.disabled = false;
+    window.alert("忽略失败：" + e);
+  }
+}
+
 function closeFixModal() {
   document.getElementById("fixModal").classList.add("hidden");
 }
@@ -3197,6 +3356,13 @@ document.addEventListener("click", (ev) => {
     if (prompt) showFixPrompt(prompt);
     return;
   }
+  const ignoreBtn = ev.target.closest(".ignore-btn");
+  if (ignoreBtn) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    ignoreWarn(ignoreBtn);
+    return;
+  }
   if (ev.target.id === "fixModal" || ev.target.id === "tagModal") {
     ev.preventDefault();
     ev.stopPropagation();
@@ -3236,7 +3402,7 @@ def _port_free(host: str, port: int) -> bool:
 
 def stop_previous_review_servers(*, keep_pid: int | None = None) -> int:
     """
-    End other skills-check-viewer.py processes so /skills-check and -review always
+    End other skills-check-viewer.py processes so /skill-review always
     load the latest script on the canonical port (not a leftover old process).
     """
     keep = keep_pid if keep_pid is not None else os.getpid()
@@ -3327,7 +3493,7 @@ def serve_report(
     open_browser: bool = True,
     restart: bool = True,
 ) -> str:
-    """Serve Review HTML. /skills-check and -review restart old servers so script code is fresh.
+    """Serve Review HTML. /skill-review restarts old servers so script code is fresh.
     Browser refresh only re-scans skill files (not this .py).
     """
     if restart:
@@ -3368,7 +3534,7 @@ def serve_report(
 
         def do_POST(self) -> None:  # noqa: N802
             path = unquote(urlparse(self.path).path)
-            if path != "/api/tag":
+            if path not in ("/api/tag", "/api/ignore"):
                 self.send_error(404, "Not Found")
                 return
             if self.headers.get("X-Skills-Check-Token") != write_token:
@@ -3392,9 +3558,18 @@ def serve_report(
             try:
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
                 with lock:
-                    tags = write_skill_tags(
-                        skills_root, payload.get("folder"), payload.get("tags")
-                    )
+                    extra: dict = {}
+                    if path == "/api/tag":
+                        extra["tags"] = write_skill_tags(
+                            skills_root, payload.get("folder"), payload.get("tags")
+                        )
+                    else:
+                        ignore_skill_warn(
+                            skills_root,
+                            payload.get("folder"),
+                            payload.get("id"),
+                            payload.get("text"),
+                        )
                     data = scan_skills(skills_root)
             except ValueError as exc:
                 self._send_json(400, {"error": str(exc)})
@@ -3403,7 +3578,7 @@ def serve_report(
                 self._send_json(500, {"error": str(exc)})
                 return
             data["initial_folder"] = initial_folder
-            self._send_json(200, {"ok": True, "tags": tags, "data": data})
+            self._send_json(200, {"ok": True, "data": data, **extra})
 
         def do_GET(self) -> None:  # noqa: N802
             path = unquote(urlparse(self.path).path)
@@ -3463,7 +3638,7 @@ def serve_report(
 
     print(
         f"本地服务: {url}  （浏览器刷新=重扫 skill 文件；"
-        f"/skills-check 或 -review=重启服务加载最新 .py；Ctrl+C 结束）",
+        f"/skill-review=重启服务加载最新 .py；Ctrl+C 结束）",
         flush=True,
     )
     if initial_folder:

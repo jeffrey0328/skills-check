@@ -12,8 +12,15 @@
 
 | 命令 | 说明 |
 |------|------|
-| `/skills-check` | 打开 Skills 总览 |
-| `/<skill> -review` | 只体检该 skill，再打开它的单页 |
+| `/skill-review` | 打开 Skills 总览 |
+| `/<skill> /skill-review` | 只体检该 skill，再打开它的单页 |
+| `/skills-check` | 打开 Skills 总览（同单独 `/skill-review`） |
+
+#### 工具
+
+| 工具 | 说明 |
+|------|------|
+| 需关注条目上的「忽略」 | 记下这一条，之后总览和单页都不再列出 |
 
 ### 在总览页管标签
 

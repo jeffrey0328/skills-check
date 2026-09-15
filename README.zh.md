@@ -20,20 +20,20 @@
 ## 功能介绍
 
 - 管每个 skill 必须怎么写：创建或编辑时先按统一形态落盘，人类页和 Review 页一起齐。
-- 打开 Skills 总览和单个 skill 的 Review 页：总览先体检整套 skill；单独 `-review` 只体检当前这一个。
+- 打开 Skills 总览和单个 skill 的 Review 页：总览先体检整套 skill；`/<skill> /skill-review` 只体检当前这一个。需关注可以点「忽略」，同一条之后不再列出。
 - 在总览页按标签筛选，右键卡片改标签，保存即写入。
-- 给还没接入 Review 的 skill 补齐配套文件和它自己的 `-review`。
+- 给还没接入 Review 的 skill 补齐配套文件和它自己的 `/skill-review`。
 
 ## 怎么用
 
-**常驻** —— 每轮对话 Agent 自己会挂载，不需要你 `@`。只要有 skill 被创建或修改（Agent 动手前先读编写规范），或者你想看 skill 的状态，它就会生效。仍然可以说 `/skills-check` 或 `@skills-check`。
+**常驻** —— 每轮对话 Agent 自己会挂载，不需要你 `@`。只要有 skill 被创建或修改（Agent 动手前先读编写规范），或者你想看 skill 的状态，它就会生效。仍然可以说 `/skill-review`、`/skills-check` 或 `@skills-check`。
 
 | 你说 | 会发生什么 |
 |------|------------|
-| `/skills-check` | 先体检全部 skill，再打开 Skills 总览（下拉勾选标签筛选，右键卡片改标签） |
-| `/<任一 skill> -review` | 只体检那一个 skill，再打开它的页面 |
+| `/skill-review` | 先体检全部 skill，再打开 Skills 总览（下拉勾选标签筛选，右键卡片改标签） |
+| `/<任一 skill> /skill-review` | 只体检那一个 skill，再打开它的页面 |
 | 「建一个 skill 做…」/「改一下这个 skill」 | Agent 按形态规范写，并同步给人看的页面 |
-| 「把 `<skill>` 接入 Review」 | 给那个 skill 补齐配套文件和它自己的 `-review` |
+| 「把 `<skill>` 接入 Review」 | 给那个 skill 补齐配套文件和它自己的 `/skill-review` |
 
 ## 常见改动
 
@@ -49,5 +49,5 @@
 | skill 卡片上显示的标签 | 在总览页右键那张卡片选「编辑标签」直接改；或说「把 `<skill>` 的标签改成 `<标签>`」 |
 | 标签词表里的候选标签 | 「标签词表加上 `<标签>`，把 `<旧标签>` 去掉」 |
 | Review 用哪里打开（内置 / 外部浏览器、端口） | 「Review 用外部浏览器打开」/「Review 换成 `<端口>` 端口」 |
-| 单独打开某个 skill 的 Review 时也体检全部 | 「-review 打开单页时也先检查全部 skill」 |
+| 单独打开某个 skill 的 Review 时也体检全部 | 「/skill-review 打开单页时也先检查全部 skill」 |
 | 一条要全套 skill 一起遵守的约定（配套文件、hub 形态） | 「`<新约定>`，全部 skill 都改，不只这一个」 |

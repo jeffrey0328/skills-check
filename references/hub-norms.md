@@ -26,8 +26,10 @@
 | `references/sync-on-update.md` | Agent | Sync after a skill update |
 | `references/skill-authoring.md` | Agent | Create/update any Agent Skill (shape, layers, companions) |
 | `tag-vocab.txt` | Human / Review | 全套 skill 共用的标签词表（总览编辑标签时的候选，一行一个） |
-| `scripts/skills-check-viewer.py` | Agent / local | Local HTTP Review viewer（含 `POST /api/tag` 写 `tag.txt`） |
-| `scripts/open-review.ps1` | Agent | This skill’s `-review` |
+| `scripts/skills-check-viewer.py` | Agent / local | Local HTTP Review viewer（含 `POST /api/tag` 写 `tag.txt`、`POST /api/ignore` 写 `review-ignored.json`） |
+| `scripts/open-review.ps1` | Agent | This skill’s `/skill-review` |
+| `/skill-review` (user commands) | Agent | Global command — alone = overview; with `/<skill>` = single |
+| `review-ignored.json` | Local | 已忽略的需关注（检查 id + 原文；本机文件，不进 git） |
 | `examples/adopt-checklist.md` | Both | Adopt checklist |
 
 **Human entry:** `README.md` + `README.zh.md`（互相入口；简介 → 安装提示词 → 功能介绍 → 怎么用 → 常见改动 → 其他；英文页英文提示词、中文页中文提示词；内容部分只有这三节，不写 `何时` / `怎么调用` / 文件角色 / 目录清单表；**required**，缺一份或入口/顺序不对 = 缺件）+ Feishu Review：`review-intro.md` / `review-body.md` / `review-usage.md`。全文不要用具体 Agent 应用名，写成当前 Agent / Agent。细节：`skill-authoring.md` § README / § Install prompt / § Agent-app names。
@@ -35,8 +37,8 @@
 ## Must
 
 - Creating or editing any skill reads `skill-authoring.md` first.
-- Before `/skills-check` overview, adapt every skill under the current app’s default skills path. Before `/<skill> -review`, adapt **that skill only** — `open-review.md` § Preflight.
-- Bare `/skills-check` then opens the overview; `/<skill> -review` opens that skill’s page — `open-review.md`.
+- Before `/skill-review` (alone) / `/skills-check` overview, adapt every skill under the current app’s default skills path. Before `/<skill> /skill-review`, adapt **that skill only** — `open-review.md` § Preflight.
+- `/skill-review` alone then opens the overview; `/<skill> /skill-review` opens that skill’s page — `open-review.md`.
 - This skill is resident: other skills created or updated this turn follow `sync-on-update.md` § Resident.
 - Adopt / retrofit follows `adopt-review.md`.
 - **Check the 关联记录 before editing:** Read `cross-reference.md` first; update it after any cross-reference change.
@@ -47,7 +49,7 @@
 ## Must not
 
 - Stuff the adopt/sync playbooks into `SKILL.md`. *(← Must: keep this hub thin)*
-- Open overview via `/jeffrey-workflow-skill -reviewall`. *(← Must: overview is `/skills-check`)*
+- Open overview via `/jeffrey-workflow-skill -reviewall`. *(← Must: overview is `/skill-review`)*
 - Default-open Review in the external browser. *(← Must: built-in browser)*
 
 ## Definition of Done

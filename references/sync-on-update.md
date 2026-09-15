@@ -25,7 +25,7 @@ When you change a skill’s workflow, constraints, triggers, examples, or layout
 | `review-body.md` | 能做什么 / 执行步骤 drifted from the new Route / Commands |
 | `review-usage.md` | Chat input, domain 子指令, or auto-invoke mode changed |
 | `tag.txt` | Only when the user asks to retag |
-| `SKILL.md` `-review` row | Keep it; do not drop it during a content edit |
+| `SKILL.md` `/skill-review` row | Keep it; do not drop it during a content edit |
 | `scripts/open-review.ps1` | Leave as-is unless § Review skill update applies |
 | `references/cross-reference.md` | Files or cited `##` / `§` headings were added, renamed, moved, or deleted |
 
@@ -33,7 +33,7 @@ Authoring detail: `skill-authoring.md` § Synchronize companion files.
 
 After the files are saved, **restart** that skill’s Review so the page rescans:
 
-- `/<that-skill> -review`
+- `/<that-skill> /skill-review`
 
 A browser refresh also rescans Markdown. It does not reload `skills-check-viewer.py`.
 
@@ -41,7 +41,7 @@ A browser refresh also rescans Markdown. It does not reload `skills-check-viewer
 
 When **this** skill changes (`skills-check-viewer.py`, `OPEN_REVIEW_PS1` template, health-check rules, or the adopt/sync docs):
 
-1. **Restart the viewer** with `/skills-check` (or `/<skill> -review`). Start always kills the old process and loads the latest `.py`.
+1. **Restart the viewer** with `/skill-review` (or `/<skill> /skill-review`). Start always kills the old process and loads the latest `.py`.
 2. **If the opener template changed** (the string that `ensure_open_review_scripts` writes), rewrite every skill’s script in the same turn:
 
 ```powershell
@@ -57,14 +57,14 @@ Treat as adopt + one opener pass:
 
 1. Follow `references/adopt-review.md` on the new folder.
 2. Run `--write-open-scripts` so the new folder gets `open-review.ps1` and existing folders stay on the current template.
-3. Open `/skills-check` once to confirm the new card.
+3. Open `/skill-review` once to confirm the new card.
 
 ## After sync
 
 | You want | Do |
 |----------|----|
-| Latest Markdown on an already-open page | Browser refresh, or restart `/<skill> -review` |
-| Latest viewer Python / health checks | `/skills-check` or `/<skill> -review` (restart) |
+| Latest Markdown on an already-open page | Browser refresh, or restart `/<skill> /skill-review` |
+| Latest viewer Python / health checks | `/skill-review` or `/<skill> /skill-review` (restart) |
 | Latest `open-review.ps1` in every skill | `--write-open-scripts` then restart |
 
 Reply with a short Chinese summary of what was synced. Do not paste viewer HTML.

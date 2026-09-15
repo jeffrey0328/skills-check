@@ -20,20 +20,20 @@ Steps:
 ## Features
 
 - Keeps every skill in the same shape: when one is created or edited, the agent writes it to the shared form and keeps the human pages and Review pages in sync.
-- Opens the all-skills overview and a single skill’s Review page: the overview preflights the fleet; a single `-review` preflights that skill only.
+- Opens the all-skills overview and a single skill’s Review page: the overview preflights the fleet; a single `/skill-review` with that skill named preflights that skill only. Warn items have an Ignore button; that same warning then stays hidden.
 - Filters the overview by tag, and lets you right-click a card to edit tags (saves immediately).
-- Adds Review companions and that skill’s own `-review` to a skill that does not have them yet.
+- Adds Review companions and that skill’s own `/skill-review` to a skill that does not have them yet.
 
 ## How to use
 
-**Resident** — the agent attaches this skill on its own, in every conversation; you do not have to `@` it. It fires whenever a skill is created or edited (the agent reads the authoring spec first), and whenever you ask to see the state of your skills. You can still say `/skills-check` or `@skills-check`.
+**Resident** — the agent attaches this skill on its own, in every conversation; you do not have to `@` it. It fires whenever a skill is created or edited (the agent reads the authoring spec first), and whenever you ask to see the state of your skills. You can still say `/skill-review`, `/skills-check`, or `@skills-check`.
 
 | You say | What happens |
 |---------|--------------|
-| `/skills-check` | Checks every skill first, then opens the all-skills overview (check tags in the dropdown, right-click a card to edit tags) |
-| `/<any-skill> -review` | Checks that skill only, then opens its page |
+| `/skill-review` | Checks every skill first, then opens the all-skills overview (check tags in the dropdown, right-click a card to edit tags) |
+| `/<any-skill> /skill-review` | Checks that skill only, then opens its page |
 | “create a skill that …” / “update this skill” | The agent applies the skill-shape norms and syncs the human pages |
-| “add `<skill>` to Review” | That skill gets the required companion files and its own `-review` |
+| “add `<skill>` to Review” | That skill gets the required companion files and its own `/skill-review` |
 
 ## Common changes
 
@@ -49,5 +49,5 @@ Say one of these to the agent; it finds and edits the right file itself.
 | The tag shown on a skill’s card | Right-click that card on the overview and pick 编辑标签; or say “Change `<skill>`’s tag to `<tag>`” |
 | Which tags the vocabulary offers | “Add `<tag>` to the tag vocabulary and drop `<old tag>`” |
 | Where Review opens (built-in vs external browser, port) | “Open Review in the external browser” / “Use port `<n>` for Review” |
-| Check the whole fleet even when opening one skill’s Review | “When -review opens a single page, still check every skill first” |
+| Check the whole fleet even when opening one skill’s Review | “When /skill-review opens a single page, still check every skill first” |
 | A shared convention across all skills (companion files, hub shape) | “`<new convention>` — apply it to every skill, not just this one” |

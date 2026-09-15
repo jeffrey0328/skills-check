@@ -1,6 +1,6 @@
 # Agent Skill authoring workflow
 
-Read this when **creating or updating** any Agent Skill. This file is the skill-shape spec for **`skills-check`**. For large-repo exploration, also read **`jeffrey-workflow-skill/references/repo-exploration.md`**. Human Review: overview `/skills-check`; single page `/<skill> -review`. Adopt / sync: `adopt-review.md` and `sync-on-update.md` in this skill.
+Read this when **creating or updating** any Agent Skill. This file is the skill-shape spec for **`skills-check`**. For large-repo exploration, also read **`jeffrey-workflow-skill/references/repo-exploration.md`**. Human Review: overview `/skill-review`; single page `/<skill> /skill-review`. Adopt / sync: `adopt-review.md` and `sync-on-update.md` in this skill.
 
 ## Exploration checklist (required)
 
@@ -22,7 +22,7 @@ Write only from what you read. Prefer repo-local facts; use **web search** only 
 
 | Path | Audience | Role |
 |------|----------|------|
-| `SKILL.md` | Agent | **Thin** English hub: routing + Commands (+ few always-on bullets). `-review` on every skill; overview via `/skills-check` |
+| `SKILL.md` | Agent | **Thin** English hub: routing + Commands (+ few always-on bullets). `/skill-review` on every skill; overview via `/skill-review` |
 | `references/` | Agent | Long workflows, full Must/Must-not, DoD, file indexes — **read on demand** |
 | `README.md` | Human | English README — **required**; link to `README.zh.md` |
 | `README.zh.md` | Human | Chinese README — **required**; link to `README.md` |
@@ -232,16 +232,17 @@ Skill frontmatter = control plane. Review tells the person how they invoke the s
 
 Invoke path belongs in `## 使用方法` as one sentence. Never paste the frontmatter `description` onto Review.
 
-Defaults if unanswered: **ask** — do not guess. Current set: **`jeffrey-workflow-skill`** → **常驻 / 默认**（description）；**`ue-dev-skill`**（UE 唯一入口，域内容在其 `modules/`）→ **条件自动**（`AGENTS.md` + `disable-model-invocation: true`）; **`user-profile`** → **常驻 / 默认**（description）；**`skills-check`** → **常驻 / 默认**（description：创建/编辑 skill 先读本规范；总览打开前适配当前 agent 默认 skills 路径下的全部 skill；`/<skill> -review` 只检查当前这一个；其他 skill 本轮被改时同步人类页）。
+Defaults if unanswered: **ask** — do not guess. Current set: **`jeffrey-workflow-skill`** → **常驻 / 默认**（description）；**`ue-dev-skill`**（UE 唯一入口，域内容在其 `modules/`）→ **条件自动**（`AGENTS.md` + `disable-model-invocation: true`）; **`user-profile`** → **常驻 / 默认**（description）；**`skills-check`** → **常驻 / 默认**（description：创建/编辑 skill 先读本规范；总览打开前适配当前 agent 默认 skills 路径下的全部 skill；`/<skill> /skill-review` 只检查当前这一个；其他 skill 本轮被改时同步人类页）。
 
 ## Review flags
 
 | Entry | Agent docs (`SKILL.md`) | Feishu Review page (`review-usage.md`) |
 |-------|-------------------------|----------------------------------------|
-| **`/<skill> -review`** | **Every** skill — that skill’s page via `scripts/open-review.ps1` | Domain skills omit it. **`skills-check`** lists its own `-review` |
-| **`/skills-check`** | **`skills-check` only** — all-skills overview | **Only** `skills-check` lists the overview command |
+| **`/<skill> /skill-review`** | **Every** skill — that skill’s page via `scripts/open-review.ps1` | Domain skills omit it. **`skills-check`** lists overview + `/skills-check /skill-review` |
+| **`/skill-review`** (alone) | Global command `/skill-review` — all-skills overview | **Only** `skills-check` lists the overview command |
+| **`/skills-check`** | **`skills-check` only** — all-skills overview (same as `/skill-review` alone) | Listed on this skill |
 
-Other skills: keep `-review` in `SKILL.md` Commands; **do not** put `-review` or `/skills-check` in their `review-usage.md`. Adopt / sync: `skills-check/references/adopt-review.md` and `sync-on-update.md`. Resident `skills-check` runs that sync when any skill is created or updated in the same turn.
+Other skills: keep `/skill-review` in `SKILL.md` Commands; **do not** put `/skill-review` or `/skills-check` in their `review-usage.md`. Adopt / sync: `skills-check/references/adopt-review.md` and `sync-on-update.md`. Resident `skills-check` runs that sync when any skill is created or updated in the same turn.
 
 ## Tag (required when creating)
 
@@ -309,7 +310,7 @@ After changing workflow, constraints, triggers, examples, or layout, check:
 - **`常见改动` rows**: if this change added or moved a knob a user would ask to change (norms, checking standards, data store, output paths, triggers), update the row in **both** READMEs.
 - **`review-intro.md`**: Chinese one-line/paragraph 简介（纯文本，无 Markdown 标记）。
 - **`review-body.md`**: Chinese `## 能做什么`（页面标题 **功能描述**：功能本身、规则、细节；不写命令、不写执行步骤、不写人类页）/ `## 执行步骤`（执行规范：每一步干什么；页面最下；相关度低才拆项；每项 `- **标签**：` 下用子列表，不要写成一段；每项都有对应 `###`，一步也写；加粗仅条目标签；见上表）。
-- **`review-usage.md`**: `## 使用方法` = 一句话怎么调用（常驻 / `@` / 关键词，见 § Language）；`## 功能` + `### <能做什么标题>` + `####` 命令/参数/脚本/工具；**overview command only on `skills-check`’s Review page** (other skills: agent `SKILL.md` `-review` only — see **Review flags**); no agent-only script list, no `## description 内容`; same bold rule as body.
+- **`review-usage.md`**: `## 使用方法` = 一句话怎么调用（常驻 / `@` / 关键词，见 § Language）；`## 功能` + `### <能做什么标题>` + `####` 命令/参数/脚本/工具；**overview command only on `skills-check`’s Review page** (other skills: agent `SKILL.md` `/skill-review` only — see **Review flags**); no agent-only script list, no `## description 内容`; same bold rule as body.
 - **Wording:** do not use a specific agent app name. Write **the current agent app**, **Agent**, or **the agent** — § Agent-app names.
 - **`tag.txt`**: one-line display tag (see **Tag** above).
 - Human Review = Feishu + `review-intro.md` + `review-body.md` + `review-usage.md` (see **Positive / negative norms**).

@@ -1,2 +1,4 @@
 __pycache__/
 *.py[cod]
+review-ignored.json
+review-ignored.json.tmp

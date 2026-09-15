@@ -7,11 +7,12 @@
   - 两种页面：Skills 总览，和单个 skill 的 Review
   - 总览体检并适配当前 Agent 默认 skills 路径下的全部 skill；单页只体检、只补这一个
   - 需关注或缺件时，标题栏下列问题，可复制修复提示词去粘贴
+  - 需关注可以点「忽略」，同一条原文之后不再列出；缺件没有忽略
 - **在总览页管标签**：
   - 总览可以按标签筛选，多选为任一命中
   - 改标签写入该 skill 的 `tag.txt`，卡片和筛选立刻刷新；清空则删除该文件
 - **接入 Review**：
-  - 给还没接入的 skill 补齐 Review 配套和它自己的 `-review`
+  - 给还没接入的 skill 补齐 Review 配套和它自己的 `/skill-review`
   - 只从该 skill 已有文件抽取，不编造流程
   - 本 skill 常驻，其他 skill 被改时会同步配套
 
@@ -25,9 +26,9 @@
 
 ### 打开 Review
 
-1. **先预检**：总览对当前 Agent 默认 skills 路径跑 `--print`，缺件当场补齐。单页 `-review` 用 `--print --skill`，只检查、只补那一个 skill。
-2. **再打开**：总览用 `/skills-check`，单页用 `/<skill> -review`。
-3. **然后看问题**：需关注或缺件时先看标题栏；要修则点「复制提示词」。
+1. **先预检**：总览对当前 Agent 默认 skills 路径跑 `--print`，缺件当场补齐。单页 `/skill-review` 用 `--print --skill`，只检查、只补那一个 skill。
+2. **再打开**：总览用 `/skill-review`，单页用 `/<skill> /skill-review`。
+3. **然后看问题**：需关注或缺件时先看标题栏；要修则点「复制提示词」；这条需关注可以不管则点「忽略」。
 
 ### 在总览页管标签
 
@@ -39,4 +40,4 @@
 
 1. **先对清单**：按 `adopt-review.md` 看缺哪些文件。
 2. **再抽已有内容**：从该 skill 的 `SKILL.md` / `README.md` / `README.zh.md` 写出人类页，不编造流程。
-3. **然后接线**：补 `SKILL.md` 的 `-review` 行，用 `--write-open-scripts` 生成 `open-review.ps1`。
+3. **然后接线**：补 `SKILL.md` 的 `/skill-review` 行，用 `--write-open-scripts` 生成 `open-review.ps1`。

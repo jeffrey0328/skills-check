@@ -27,6 +27,7 @@ Do this in the **target skill directory** under the current skills root.
 | `review-body.md` | Human | Chinese `## 能做什么` (**功能描述**: feature + rules + details, not 命令 / 执行步骤 / 人类页) and `## 执行步骤` (what each step does; last on the page). Split 能做什么 only when jobs are loosely related. Each item is `- **标签**：` plus nested bullets (one fact per line), not a paragraph. Every item has a matching `###` — even one step. Bold **only the lead label** before `：`. Do not use a specific agent app name. |
 | `review-usage.md` | Human | Chinese `## 使用方法` as one sentence (常驻 / `@` / 关键词). `## 功能` + `### <能做什么标题>` + `####` 命令/参数/脚本/工具. **Omit** `/skill-review` and `/skills-check` on domain skills. No agent-only script list, no `## description 内容`. Do not use a specific agent app name. |
 | `tag.txt` | Human / Review | One UTF-8 line. Multiple tags: comma-separated. Propose, then write what the user confirms. |
+| `kind.txt` | Human / Review | One UTF-8 line: `演进` or `底本`. Propose with the tag; default existing fleet to `演进`. |
 | `scripts/open-review.ps1` | Agent | Generated — do not hand-write a different viewer path. See § Generate opener. |
 | Three layers | Agent | `SKILL.md` indexes `references/` (or `modules/` / `standards/`) and `examples/` — `skill-authoring.md` § Three layers. Stub-only `examples/` does not count. |
 
@@ -41,6 +42,7 @@ When `open-review.md` § Preflight lists unadapted skills **in scope**, apply §
 
 - Extract `review-intro.md` / `review-body.md` / `review-usage.md` / `README.md` / `README.zh.md` from that skill’s existing hub and docs. Write only what those files already say.
 - If `tag.txt` is missing, write one short tag from the folder name and tell the user they can rename it.
+- If `kind.txt` is missing, write `演进` and tell the user they can switch to 底本.
 - Add the `/skill-review` Commands row if missing.
 - After the last **in-scope** skill, overview runs `--write-open-scripts` once for the whole root. Single-page: if that skill’s opener is missing, write **that** `scripts/open-review.ps1` only.
 

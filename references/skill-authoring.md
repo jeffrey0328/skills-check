@@ -30,6 +30,7 @@ Write only from what you read. Prefer repo-local facts; use **web search** only 
 | `review-body.md` | Human | Feishu Review **功能描述** / **执行步骤** (`## 能做什么` = 功能描述, `## 执行步骤`; **Chinese**). 功能描述 = the feature itself + standing rules + details. 执行步骤 = what each step does. Do not repeat 命令, 执行步骤, or 人类页 (README / Review companions) in 功能描述. Split 能做什么 only when jobs are loosely related. Each item is `- **标签**：` plus a nested bullet list (one fact per line). Every item has a matching `###` — even one step |
 | `review-usage.md` | Human | Feishu Review **使用方法** (one sentence) + **功能** — what a person types / says / clicks. No `description` dump, no `scripts/*` inventory |
 | `tag.txt` | Human / Review | Display tags |
+| `kind.txt` | Human / Review | Skill type: one line `演进` or `底本` (chip **演进型** / **底本型**) |
 | `examples/` | Both | Layer-3 cases (see **Three layers**) |
 | `scripts/` | Agent / local | Bound to flags / SKILL actions — not listed under Review「怎么用」 |
 
@@ -207,7 +208,7 @@ Forbidden names (any capitalization or spacing): Cursor, Claude Code, ClaudeCode
 
 The install prompt says「某一个 Agent 产品」, not an agent app name.
 
-This section is the ban list (needed so the checker can name what is forbidden). CSS `cursor:` in stylesheets is the CSS property, not an agent app name. A git host (`origin.cursor.com`, `cursor.com`), a hyphenated command or record id (`/push-cursor`, `cursor-config`), or a git remote name written as a code span or after `add ` / `-u `, is a host/CLI identifier, not an agent app name.
+This section is the ban list (needed so the checker can name what is forbidden). CSS `cursor:` in stylesheets is the CSS property, not an agent app name. A git host (`origin.cursor.com`, `cursor.com`), a hyphenated command or record id (`/push-cursor`, `cursor-config`), a git remote name written as a code span or after `add ` / `-u `, or a protocol prompt deeplink (`cursor://…`), is a host/CLI identifier, not an agent app name.
 
 ## Auto-invocation decision (required when creating)
 
@@ -271,6 +272,47 @@ Each skill has **one or more** short display tags (Chinese preferred), shown aft
 
 On update, change `tag.txt` only when the user asks to retag.
 
+## Skill kind (required when creating)
+
+Each skill is one type. Review shows a chip next to the name, before tags.
+
+| File value (`kind.txt`) | Chip | Who may rewrite the skill |
+|-------------------------|------|---------------------------|
+| `演进` | **演进型** | The agent may keep improving the skill from observed use, pitfalls, and implementations. **Required:** a documented update loop in `references/` (or that skill’s playbook). Each such update tells the user **更新标准 / 更新依据 / 更新条目**. |
+| `底本` | **底本型** | The agent does **not** rewrite the skill on its own. Updates come only from the user’s direct command, or when a cited information source itself changed. |
+
+**Storage (in the skill directory):**
+
+```
+<skill-root>/kind.txt
+```
+
+- Single line, UTF-8. Only `演进` or `底本`. Missing or any other value = **缺件**.
+- Editing from the overview: right-click a card → **标为演进型** / **标为底本型**. Writes `kind.txt` and refreshes.
+
+**Before finishing** a new skill (same turn as the tag):
+
+1. **Propose** a type from the work: growing from use / pitfalls → `演进`; a frozen playbook or source dump → `底本`.
+2. **Ask** the user to confirm:  
+   > 建议类型为「演进型 / 底本型」，是否按这个落盘？可改。
+3. Write the confirmed value to **`kind.txt`**.
+
+Existing skills without a type: write `演进` and tell the user they can switch.
+
+### 演进型 — update loop + user brief
+
+Must have a written update mechanism (how observation becomes a write). After each agent-driven update (not a user command that already states the exact change), the user-facing brief is three lines:
+
+- **更新标准** — which bar / rule this write is applying
+- **更新依据** — what was observed (use / pitfall / implementation)
+- **更新条目** — which files or bullets changed
+
+### 底本型 — no spontaneous rewrite
+
+Do not add a learn-from-runs or agent-driven rewrite loop. Source-change updates still need one-line **依据** naming the source. Other writes only when the user directly commands them.
+
+On update, change `kind.txt` only when the user asks to switch type.
+
 ## Partial read (skills & rules → context/cache)
 
 **Consuming** a Skill or project/plugin rules file: do **not** default-Read the whole file into context.
@@ -313,12 +355,13 @@ After changing workflow, constraints, triggers, examples, or layout, check:
 - **`review-usage.md`**: `## 使用方法` = 一句话怎么调用（常驻 / `@` / 关键词，见 § Language）；`## 功能` + `### <能做什么标题>` + `####` 命令/参数/脚本/工具；**overview command only on `skills-check`’s Review page** (other skills: agent `SKILL.md` `/skill-review` only — see **Review flags**); no agent-only script list, no `## description 内容`; same bold rule as body.
 - **Wording:** do not use a specific agent app name. Write **the current agent app**, **Agent**, or **the agent** — § Agent-app names.
 - **`tag.txt`**: one-line display tag (see **Tag** above).
+- **`kind.txt`**: one line `演进` or `底本` (see **Skill kind** above). Write on create; change only when the user asks.
 - Human Review = Feishu + `review-intro.md` + `review-body.md` + `review-usage.md` (see **Positive / negative norms**).
 - **`examples/`**: layer-3 cases (or `case-index.md` pointing at in-skill templates) — § Three layers.
 - **`references/`**: if agent workflows moved out of `SKILL.md`.
 - **Thin hub:** create/update still satisfies **Thin hub / slash-attach budget** — hub stays routing-only; long norms/DoD/playbooks stay in `references/`.
 - **Prefer static:** if the change adds repeatable automation that used to be chat-only dynamic code, ensure `scripts/` / `examples/` / `references/` + **when to use** are present — § Prefer static skill assets.
-- **`cross-reference.md` (this skill's 关联记录):** if you added, renamed, moved, or deleted a `references/` / `scripts/` / `examples/` file, `tag.txt`, or a cited `##` / `§` heading, update the affected rows so it stays the single source for "who references what (whole/§)".
+- **`cross-reference.md` (this skill's 关联记录):** if you added, renamed, moved, or deleted a `references/` / `scripts/` / `examples/` file, `tag.txt`, `kind.txt`, or a cited `##` / `§` heading, update the affected rows so it stays the single source for "who references what (whole/§)".
 
 ## Cross-skill rollout (关联记录 & shared conventions)
 
@@ -342,5 +385,7 @@ After **create or meaningful update** of a Skill (new Route row, new `references
 3. **执行逻辑** — step-by-step what the agent does when the new content matches (match intent → which file Read → what rules apply → report `Routed: …` when a hub is involved). Prefer a short numbered flow or mermaid; name the exact reference path.
 
 Skip only for pure typo/format fixes with no Route/`description`/workflow change — say so in one line.
+
+If this write was an agent-driven update to a **演进型** skill (observed use / pitfall / implementation, not a user command that already stated the exact change), also include **更新标准 / 更新依据 / 更新条目** — § Skill kind.
 
 If a companion file needs no change, say why in the summary. Meaningful skill changes should keep `SKILL.md`, `README.md`, `README.zh.md`, `review-intro.md`, `review-body.md`, `review-usage.md`, `examples/`, and `references/` aligned in substance.

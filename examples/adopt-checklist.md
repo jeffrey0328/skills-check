@@ -8,6 +8,7 @@ Use with `references/adopt-review.md`. Tick in the **target** skill folder. Over
 - [ ] `review-body.md` — `## 能做什么`（页面「功能描述」：功能本身、规则、细节；不重复命令/执行步骤，不写人类页）/ `## 执行步骤`（最下；每一步干什么；相关度低才拆项；每项 `- **标签**：` 下用子列表，不要一段；每项都有 `###`，一步也写）；不要用具体 Agent 应用名
 - [ ] `review-usage.md` — `## 使用方法`（一句话怎么调用）；`## 功能` 下只有 `####` 命令/参数/脚本/工具（domain skill 不写 `/skill-review` / `/skills-check`）；不要用具体 Agent 应用名
 - [ ] `tag.txt` — one line; user-confirmed
+- [ ] `kind.txt` — one line `演进` or `底本`; user-confirmed (default existing fleet to `演进`)
 - [ ] `SKILL.md` Commands row: `/skill-review` → `scripts/open-review.ps1`
 - [ ] Generate opener:
 

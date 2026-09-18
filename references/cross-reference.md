@@ -8,7 +8,7 @@ Records **who references each tracked file** and whether the reference is to the
 
 - **Before editing** any file listed below (rename, move, delete, or rename/remove a `##` / `§` heading that appears in the 范围 column), **read this record first** and update every listed referencer.
 - **After editing**, keep this record in sync.
-- **Scope of tracking:** all `references/*.md`, `scripts/*`, `examples/*`, and `tag.txt`. `SKILL.md` / `README.md` / `README.zh.md` / `review-*.md` appear as **referencers** only.
+- **Scope of tracking:** all `references/*.md`, `scripts/*`, `examples/*`, `tag.txt`, and `kind.txt`. `SKILL.md` / `README.md` / `README.zh.md` / `review-*.md` appear as **referencers** only.
 
 ## references/
 
@@ -23,7 +23,7 @@ Records **who references each tracked file** and whether the reference is to the
 |---------------|------|
 | `SKILL.md` Commands + Route「总览 / /skill-review」+ Always | § Preflight / § Overview / § Single |
 | `hub-norms.md` File index + Must | 整篇 + § Preflight |
-| `review-body.md` 能做什么 · 打开 Review | § Preflight / § Overview / § Single |
+| `review-body.md` 能做什么 · 打开 Review | § Preflight / § Overview / § Single / § Views Chat hook |
 | `adopt-review.md` Verify | § Single |
 | `sync-on-update.md` After sync | 整篇 |
 | global command `/skill-review` | 整篇（分流 overview / single） |
@@ -55,7 +55,7 @@ Records **who references each tracked file** and whether the reference is to the
 | `sync-on-update.md` | § Synchronize companion files |
 | `review-body.md` 能做什么 / 执行步骤 | 整篇 |
 | `examples/three-layer-layout.md` | § Three layers |
-| `scripts/skills-check-viewer.py` | § Three layers / § Positive / negative norms |
+| `scripts/skills-check-viewer.py` | § Three layers / § Positive / negative norms / § Skill kind |
 
 ### hub-norms.md
 | Referenced by | 范围 |
@@ -72,10 +72,12 @@ Records **who references each tracked file** and whether the reference is to the
 | `adopt-review.md` § Generate opener | 调用 (`--write-open-scripts`) |
 | `sync-on-update.md` § Review skill update | 调用 (整篇) |
 | `scripts/open-review.ps1` | 调用 (整篇) |
-| **Parses:** each skill’s `review-intro.md`, `review-body.md`, `review-usage.md`, `tag.txt`, `SKILL.md`, `README.md`, `README.zh.md` | 解析 |
+| **Parses:** each skill’s `review-intro.md`, `review-body.md`, `review-usage.md`, `tag.txt`, `kind.txt`, `SKILL.md`, `README.md`, `README.zh.md` | 解析 |
 | **Generates:** each skill’s `scripts/open-review.ps1` | 生成 |
 | **Writes (`POST /api/tag`):** each skill’s `tag.txt` + this skill’s `tag-vocab.txt` | 写入 |
+| **Writes (`POST /api/kind`):** each skill’s `kind.txt` | 写入 |
 | **Writes (`POST /api/ignore`):** this skill’s `review-ignored.json` | 写入 |
+| **Opens (`POST /api/prompt-deeplink`):** prompt deeplink 预填对话 | 打开 |
 
 ### open-review.ps1
 | Referenced by | 范围 |
@@ -105,6 +107,16 @@ Records **who references each tracked file** and whether the reference is to the
 | `hub-norms.md` File index | 整篇 |
 | `skill-authoring.md` § Tag | 整篇 |
 
+## kind.txt
+| Referenced by | 范围 |
+|---------------|------|
+| `scripts/skills-check-viewer.py` | 解析 + 写入 (`POST /api/kind`) |
+| `hub-norms.md` File index | 整篇 |
+| `skill-authoring.md` § Skill kind | 整篇 |
+| `open-review.md` § Preflight + § Views (Kind hook) + § Health | 整篇 |
+| `adopt-review.md` § Checklist + § Fleet adapt | 整篇 |
+| `sync-on-update.md` § Domain skill update | 整篇 |
+
 ## tag-vocab.txt
 | Referenced by | 范围 |
 |---------------|------|
@@ -112,6 +124,8 @@ Records **who references each tracked file** and whether the reference is to the
 | `skill-authoring.md` § Tag | 整篇 |
 | `hub-norms.md` File index | 整篇 |
 | `open-review.md` § Views (Tag hook) | 整篇 |
+| `open-review.md` § Views (Kind hook) | `kind.txt` 同行约定 |
+| `open-review.md` § Views (Chat hook) | 预填对话 |
 
 ## review-ignored.json
 | Referenced by | 范围 |

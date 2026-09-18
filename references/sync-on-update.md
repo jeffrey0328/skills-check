@@ -25,6 +25,7 @@ When you change a skill’s workflow, constraints, triggers, examples, or layout
 | `review-body.md` | 能做什么 / 执行步骤 drifted from the new Route / Commands |
 | `review-usage.md` | Chat input, domain 子指令, or auto-invoke mode changed |
 | `tag.txt` | Only when the user asks to retag |
+| `kind.txt` | Only when the user asks to switch 演进 / 底本 |
 | `SKILL.md` `/skill-review` row | Keep it; do not drop it during a content edit |
 | `scripts/open-review.ps1` | Leave as-is unless § Review skill update applies |
 | `references/cross-reference.md` | Files or cited `##` / `§` headings were added, renamed, moved, or deleted |

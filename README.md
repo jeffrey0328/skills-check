@@ -20,8 +20,8 @@ Steps:
 ## Features
 
 - Keeps every skill in the same shape: when one is created or edited, the agent writes it to the shared form and keeps the human pages and Review pages in sync.
-- Opens the all-skills overview and a single skill’s Review page: the overview preflights the fleet; a single `/skill-review` with that skill named preflights that skill only. Warn items have an Ignore button; that same warning then stays hidden.
-- Filters the overview by tag, and lets you right-click a card to edit tags (saves immediately).
+- Opens the all-skills overview and a single skill’s Review page: the overview preflights the fleet; a single `/skill-review` with that skill named preflights that skill only. Flagged items have 开对话 (prefilled chat, confirm send) and Ignore.
+- Filters the overview by tag or type (演进型 / 底本型), and lets you right-click a card to edit tags or switch type (saves immediately).
 - Adds Review companions and that skill’s own `/skill-review` to a skill that does not have them yet.
 
 ## How to use
@@ -30,7 +30,7 @@ Steps:
 
 | You say | What happens |
 |---------|--------------|
-| `/skill-review` | Checks every skill first, then opens the all-skills overview (check tags in the dropdown, right-click a card to edit tags) |
+| `/skill-review` | Checks every skill first, then opens the all-skills overview (filter by type or tags; right-click a card to edit tags or switch 演进型 / 底本型) |
 | `/<any-skill> /skill-review` | Checks that skill only, then opens its page |
 | “create a skill that …” / “update this skill” | The agent applies the skill-shape norms and syncs the human pages |
 | “add `<skill>` to Review” | That skill gets the required companion files and its own `/skill-review` |
@@ -47,6 +47,7 @@ Say one of these to the agent; it finds and edits the right file itself.
 | How Review「能做什么」is laid out | “Write 能做什么 as a bullet list, not a paragraph” |
 | How「功能描述」vs「执行步骤」split | “功能描述 is the feature and its rules; 执行步骤 is what each step does; don’t repeat commands or steps” |
 | The tag shown on a skill’s card | Right-click that card on the overview and pick 编辑标签; or say “Change `<skill>`’s tag to `<tag>`” |
+| A skill’s type (演进型 / 底本型) | Right-click that card and pick 标为演进型 / 标为底本型; or say “把 `<skill>` 改成底本型” |
 | Which tags the vocabulary offers | “Add `<tag>` to the tag vocabulary and drop `<old tag>`” |
 | Where Review opens (built-in vs external browser, port) | “Open Review in the external browser” / “Use port `<n>` for Review” |
 | Check the whole fleet even when opening one skill’s Review | “When /skill-review opens a single page, still check every skill first” |

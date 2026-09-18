@@ -1,1 +1,1 @@
-这个 skill 常驻：创建或编辑任何 skill 时先读这里的 skill 规范；同时负责 Skills 总览和各 skill 的飞书风 Review。打开总览前先检查当前 Agent 默认 skill 路径下是否都已适配，缺的当场补齐。单独打开某一个 skill 的 Review 时只检查这一个。其他 skill 本轮被改时同步人类页。单独 /skill-review 是总览，/<skill> /skill-review 打开该 skill 单页。需关注可以忽略，同一条之后不再提示。
+这个 skill 常驻：创建或编辑任何 skill 时先读这里的 skill 规范；同时负责 Skills 总览和各 skill 的飞书风 Review。每个 skill 有类型：演进型会观察使用后自发更新并告知标准、依据、条目；底本型除信息源变更外只按用户直接命令更新。打开总览前先检查当前 Agent 默认 skill 路径下是否都已适配，缺的当场补齐。单独打开某一个 skill 的 Review 时只检查这一个。其他 skill 本轮被改时同步人类页。单独 /skill-review 是总览，/<skill> /skill-review 打开该 skill 单页。被标出的需关注或缺件可点开对话弹出预填对话，需确认发送。需关注可以忽略，同一条之后不再提示。

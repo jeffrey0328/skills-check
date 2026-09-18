@@ -38,7 +38,7 @@ import webbrowser
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote, urlparse, urlencode
 
 DEFAULT_PORT = 18765
 SKIP_DIRS = {"logs", "scripts", ".git"}
@@ -59,6 +59,8 @@ MAX_IGNORED_PER_SKILL = 200
 MAX_TAGS_PER_SKILL = 8
 MAX_TAG_VOCAB = 200
 MAX_TAG_LEN = 24
+KIND_VALUES = ("演进", "底本")
+KIND_LABELS = {"演进": "演进型", "底本": "底本型"}
 
 # Positive/negative norm pairing (skill-authoring.md § Positive / negative norms)
 _POS_HEADING = re.compile(
@@ -295,6 +297,7 @@ def strip_non_app_name_tokens(body: str) -> str:
     """
     tok = "cur" + "sor"
     body = re.sub(rf"(?i){tok}\s*:", "", body)
+    body = re.sub(rf"(?i){tok}://\S+", "", body)
     body = re.sub(rf"(?i)origin\.{tok}\.com", "", body)
     body = re.sub(rf"(?i)(?<![./\\]){tok}\.com\b", "", body)
     body = re.sub(rf"(?i)(?<=-){tok}\b", "", body)
@@ -1473,6 +1476,24 @@ def check_skill(folder: Path) -> dict:
     else:
         add("tag", "warn", "tag.txt", "缺失（总览/单页名称旁显示；创建时询问；多标签用逗号分隔）")
 
+    kind = parse_skill_kind(folder)
+    if kind in KIND_VALUES:
+        add("kind", "pass", "kind.txt", KIND_LABELS[kind])
+    elif not kind:
+        add(
+            "kind",
+            "fail",
+            "kind.txt",
+            "缺失（演进型 / 底本型；总览与单页名称旁显示；创建时询问）",
+        )
+    else:
+        add(
+            "kind",
+            "fail",
+            "kind.txt",
+            f"取值非法 `{kind}`（只能是 演进 或 底本）",
+        )
+
     if len(desc) >= 40:
         add("fm_desc", "pass", "frontmatter description", f"{len(desc)} 字符")
     elif desc:
@@ -1903,6 +1924,8 @@ def check_skill(folder: Path) -> dict:
         "frontmatter_name": fm_name,
         "tag": tag,
         "tags": tags,
+        "kind": kind if kind in KIND_VALUES else "",
+        "kind_label": KIND_LABELS.get(kind, ""),
         "display_title": content["title"],
         "intro": intro,
         "issues": issues,
@@ -1979,6 +2002,63 @@ def write_skill_tags(root: Path, folder: str, tags: list[str]) -> list[str]:
     os.replace(tmp, tag_file)
     merge_tag_vocab(clean)
     return clean
+
+
+def parse_skill_kind(folder: Path) -> str:
+    """Read `kind.txt` first line. Empty string if missing."""
+    path = folder / "kind.txt"
+    if not path.is_file():
+        return ""
+    raw = path.read_text(encoding="utf-8", errors="replace").strip()
+    if not raw:
+        return ""
+    return raw.splitlines()[0].strip()
+
+
+def write_skill_kind(root: Path, folder: str, kind: object) -> str:
+    """Write `kind.txt` for one skill under `root`. Value must be 演进 or 底本."""
+    if not isinstance(kind, str):
+        raise ValueError("kind 缺失")
+    value = kind.strip()
+    if value not in KIND_VALUES:
+        raise ValueError("类型只能是 演进 或 底本")
+    target = _assert_skill_folder(root, folder)
+    kind_file = target / "kind.txt"
+    tmp = kind_file.with_suffix(".txt.tmp")
+    tmp.write_text(value + "\n", encoding="utf-8")
+    os.replace(tmp, kind_file)
+    return value
+
+
+PROMPT_DEEPLINK_MAX = 12000
+
+
+def prompt_deeplink_uri(prompt: str) -> str:
+    """Build a prompt deeplink. Scheme is concatenated so this file stays agent-agnostic."""
+    text = (prompt or "").strip()
+    if not text:
+        raise ValueError("prompt 为空")
+    if len(text) > PROMPT_DEEPLINK_MAX:
+        raise ValueError("prompt 过长")
+    scheme = "cur" + "sor"
+    base = f"{scheme}://anysphere.{scheme}-deeplink/prompt"
+    return base + "?" + urlencode({"text": text})
+
+
+def open_prompt_deeplink(prompt: object) -> str:
+    if not isinstance(prompt, str):
+        raise ValueError("prompt 缺失")
+    uri = prompt_deeplink_uri(prompt)
+    if sys.platform == "win32":
+        try:
+            os.startfile(uri)
+        except OSError:
+            subprocess.Popen(["cmd", "/c", "start", "", uri], close_fds=True)
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", uri], close_fds=True)
+    else:
+        subprocess.Popen(["xdg-open", uri], close_fds=True)
+    return uri
 
 
 def _assert_skill_folder(root: Path, folder: str) -> Path:
@@ -2312,12 +2392,30 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     color: var(--primary);
     line-height: 1.4;
   }
+  .skill-kind {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    line-height: 1.4;
+    letter-spacing: .02em;
+  }
+  .skill-kind-evolve { background: #e8f3ff; color: #1456c8; }
+  .skill-kind-source { background: #f0f0f2; color: #4a4d57; }
   .hero .skill-tag {
     background: rgba(255,255,255,.22);
     color: #fff;
     font-size: 12px;
     vertical-align: middle;
   }
+  .hero .skill-kind {
+    color: #fff;
+    font-size: 12px;
+    vertical-align: middle;
+  }
+  .hero .skill-kind-evolve { background: rgba(255,255,255,.22); }
+  .hero .skill-kind-source { background: rgba(255,255,255,.16); }
   .skill-row .intro { color: var(--text-2); font-size: 12px; line-height: 1.5; margin-top: 4px; max-width: 52em; }
   .skill-row .issues { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
   .issue-line {
@@ -2348,6 +2446,14 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   }
   .ignore-btn:hover { background: var(--warn-soft); }
   .ignore-btn:disabled { opacity: .65; cursor: wait; }
+  .copy-btn {
+    font-size: 11px; font-weight: 650;
+    padding: 2px 8px; border-radius: 999px;
+    background: #fff; color: var(--primary);
+    border: 1px solid #c9d4f5;
+    cursor: pointer; font-family: inherit; line-height: 1.4;
+  }
+  .copy-btn:hover { background: var(--primary-soft); }
   .problems-block .problems-hd {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
   }
@@ -2655,6 +2761,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
           <button type="button" class="chip-btn" data-filter="warn">仅需关注</button>
           <button type="button" class="chip-btn" data-filter="pass">仅通过</button>
         </div>
+        <div class="tag-filters" id="kindFilters"></div>
         <div class="tag-filters" id="tagFilters"></div>
         <div id="skillList"></div>
       </div>
@@ -2702,7 +2809,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
       <textarea id="promptText" readonly rows="12"></textarea>
       <div class="fix-modal-actions">
         <button type="button" class="btn btn-ghost" id="fixClose">关闭</button>
-        <button type="button" class="fix-btn" id="promptCopy">复制提示词</button>
+        <button type="button" class="btn btn-ghost" id="promptCopy">复制提示词</button>
+        <button type="button" class="fix-btn" id="promptChat">开对话</button>
       </div>
     </div>
   </div>
@@ -2714,6 +2822,7 @@ let refreshTimer = null;
 const selectedCapBySkill = {};
 const WRITE_TOKEN = __WRITE_TOKEN__;
 let tagFilter = [];
+let kindFilter = "";
 let tagMenuOpen = false;
 let tagDraft = { folder: null, tags: [] };
 
@@ -2771,7 +2880,7 @@ function issueLineHtml(s, issue) {
   const ignore = issue.level === "warn"
     ? `<button type="button" class="ignore-btn" data-folder="${encodeURIComponent(s.folder)}" data-id="${encodeURIComponent(issue.id || "")}" data-text="${encodeURIComponent(issue.text || "")}">忽略</button>`
     : "";
-  return `<div class="issue-line ${issue.level}"><span class="tag">${tag}</span><span class="issue-text">${escapeHtml(issue.text)}</span><span class="issue-actions"><button type="button" class="fix-btn" data-prompt="${prompt}">复制提示词</button>${ignore}</span></div>`;
+  return `<div class="issue-line ${issue.level}"><span class="tag">${tag}</span><span class="issue-text">${escapeHtml(issue.text)}</span><span class="issue-actions"><button type="button" class="fix-btn" data-chat="${prompt}">开对话</button><button type="button" class="copy-btn" data-prompt="${prompt}">复制</button>${ignore}</span></div>`;
 }
 function findSkill(folder) {
   return (DATA.skills || []).find((s) => s.folder === folder) || null;
@@ -2800,12 +2909,45 @@ function tagCounts() {
 }
 
 function hasActiveFilter() {
-  return filter !== "all" || tagFilter.length > 0;
+  return filter !== "all" || tagFilter.length > 0 || !!kindFilter;
+}
+
+function kindLabel(kind) {
+  if (kind === "底本") return "底本型";
+  if (kind === "演进") return "演进型";
+  return "";
+}
+function kindChipHtml(kind) {
+  const label = kindLabel(kind);
+  if (!label) return "";
+  const cls = kind === "底本" ? "source" : "evolve";
+  const tip = kind === "底本"
+    ? "除信息源变更外，只按用户直接命令更新"
+    : "观察使用后可自发更新；每次须告知更新标准 / 依据 / 条目";
+  return `<span class="skill-kind skill-kind-${cls}" title="${tip}">${escapeHtml(label)}</span>`;
+}
+function renderKindFilters() {
+  const box = document.getElementById("kindFilters");
+  if (!box) return;
+  const counts = { 演进: 0, 底本: 0 };
+  (DATA.skills || []).forEach((s) => {
+    if (s.kind === "演进" || s.kind === "底本") counts[s.kind] += 1;
+  });
+  const bits = [
+    { id: "演进", label: "演进型", n: counts["演进"] },
+    { id: "底本", label: "底本型", n: counts["底本"] },
+  ];
+  box.innerHTML = `<span class="lead">类型</span>`
+    + bits.map((b) => {
+      const on = kindFilter === b.id ? " active" : "";
+      return `<button type="button" class="chip-btn${on}" data-kind="${b.id}">${b.label} ${b.n}</button>`;
+    }).join("");
 }
 
 function clearFilters() {
   filter = "all";
   tagFilter = [];
+  kindFilter = "";
   tagMenuOpen = false;
   document.querySelectorAll("#filters .chip-btn").forEach((b) =>
     b.classList.toggle("active", b.dataset.filter === "all")
@@ -2886,11 +3028,13 @@ function renderOverview() {
     missHint = bits.join(" · ");
   }
   document.getElementById("missHint").textContent = missHint;
+  renderKindFilters();
   renderTagFilters();
   const list = document.getElementById("skillList");
   list.innerHTML = "";
   const skills = (DATA.skills || [])
     .filter((s) => filter === "all" || s.status === filter)
+    .filter((s) => !kindFilter || s.kind === kindFilter)
     .filter((s) => !tagFilter.length || (s.tags || []).some((t) => tagFilter.includes(t)));
   if (!skills.length) {
     list.innerHTML = '<div class="empty">当前筛选下没有 Skill</div>';
@@ -2907,6 +3051,7 @@ function renderOverview() {
     const tagHtml = tags.map((t) =>
       `<span class="skill-tag">${escapeHtml(t)}</span>`
     ).join("");
+    const kindHtml = kindChipHtml(s.kind);
     const countBadge = (s.status === "pass")
       ? ""
       : `<span class="badge neutral">${s.counts.fail} fail · ${s.counts.warn} warn</span>`;
@@ -2914,6 +3059,7 @@ function renderOverview() {
       <div>
         <div class="name-row">
           <span class="name">${escapeHtml(s.folder)}</span>
+          ${kindHtml}
           ${tagHtml}
         </div>
         <div class="intro">${escapeHtml(s.intro || "")}</div>
@@ -2925,7 +3071,7 @@ function renderOverview() {
         ${countBadge}
       </div>`;
     btn.addEventListener("click", (ev) => {
-      if (ev.target.closest(".fix-btn") || ev.target.closest(".ignore-btn")) return;
+      if (ev.target.closest(".fix-btn") || ev.target.closest(".copy-btn") || ev.target.closest(".ignore-btn")) return;
       goSkill(s.folder);
     });
     btn.addEventListener("contextmenu", (ev) => {
@@ -2953,7 +3099,7 @@ function issuesSectionHtml(s) {
   if (s.status !== "warn" && s.status !== "fail") return "";
   const items = (s.issues || []).map((i) => issueLineHtml(s, i)).join("");
   const allBtn = (s.issues && s.issues.length > 1)
-    ? `<button type="button" class="fix-btn" data-prompt="${encodeURIComponent(buildFixPrompt(s))}">复制全部提示词</button>`
+    ? `<span class="issue-actions"><button type="button" class="fix-btn" data-chat="${encodeURIComponent(buildFixPrompt(s))}">开对话修全部</button><button type="button" class="copy-btn" data-prompt="${encodeURIComponent(buildFixPrompt(s))}">复制全部</button></span>`
     : "";
   return `
     <div class="problems-block" id="sec-problems">
@@ -2999,10 +3145,11 @@ function heroHtml(s, c) {
   const tagHtml = tags.map((t) =>
     `<span class="skill-tag">${escapeHtml(t)}</span>`
   ).join("");
+  const kindHtml = kindChipHtml(s.kind);
   return `
     <div class="hero">
       <div class="label">Skill Review</div>
-      <div class="big"><span>${escapeHtml(c.title || s.display_title || s.folder)}</span>${tagHtml}</div>
+      <div class="big"><span>${escapeHtml(c.title || s.display_title || s.folder)}</span>${kindHtml}${tagHtml}</div>
       <div class="sub">${escapeHtml(c.blurb || s.intro || "")}</div>
       <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px">
         <span class="badge ${s.status}">${statusLabel(s.status)}</span>
@@ -3111,6 +3258,13 @@ document.getElementById("filters").addEventListener("click", (e) => {
   document.querySelectorAll("#filters .chip-btn").forEach((b) => b.classList.toggle("active", b === btn));
   renderOverview();
 });
+document.getElementById("kindFilters").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-kind]");
+  if (!btn) return;
+  const next = btn.dataset.kind;
+  kindFilter = kindFilter === next ? "" : next;
+  renderOverview();
+});
 document.getElementById("tagFilters").addEventListener("click", (e) => {
   e.stopPropagation();
   if (e.target.closest("#tagDdBtn")) {
@@ -3139,7 +3293,12 @@ document.getElementById("ctxMenu").addEventListener("click", (e) => {
   const folder = document.getElementById("ctxMenu").dataset.folder;
   closeCtxMenu();
   if (btn.dataset.act === "tags") openTagModal(folder);
-  else if (btn.dataset.act === "open") goSkill(folder);
+    else if (btn.dataset.act === "kind") setSkillKind(folder, btn.dataset.kind);
+    else if (btn.dataset.act === "open") goSkill(folder);
+  else if (btn.dataset.act === "chat") {
+    const s = findSkill(folder);
+    if (s) openPromptChat(buildFixPrompt(s, null));
+  }
   else if (btn.dataset.act === "prompt") {
     const s = findSkill(folder);
     if (s) showFixPrompt(buildFixPrompt(s, null));
@@ -3201,8 +3360,11 @@ function closeCtxMenu() {
 function openCtxMenu(x, y, s) {
   const menu = document.getElementById("ctxMenu");
   const items = [`<button type="button" data-act="tags">编辑标签</button>`,
+    `<button type="button" data-act="kind" data-kind="演进">标为演进型</button>`,
+    `<button type="button" data-act="kind" data-kind="底本">标为底本型</button>`,
     `<button type="button" data-act="open">进入 Review 页</button>`];
   if ((s.issues || []).length) {
+    items.push(`<button type="button" data-act="chat">开对话修复</button>`);
     items.push(`<button type="button" data-act="prompt">复制修复提示词</button>`);
   }
   menu.innerHTML = items.join("");
@@ -3250,6 +3412,26 @@ function addTagDraft(raw) {
   tagDraft.tags.push(tag);
   err.textContent = "";
   renderTagDraft();
+}
+async function setSkillKind(folder, kind) {
+  try {
+    const r = await fetch("/api/kind", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Skills-Check-Token": WRITE_TOKEN },
+      body: JSON.stringify({ folder: folder, kind: kind }),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok || !out.ok) {
+      window.alert(out.error || ("保存类型失败：HTTP " + r.status));
+      return;
+    }
+    if (out.data && Array.isArray(out.data.skills)) DATA = out.data;
+    const routeNow = parseRoute();
+    if (routeNow.folder) renderDetail(routeNow.folder);
+    else renderOverview();
+  } catch (e) {
+    window.alert("保存类型失败：" + e);
+  }
 }
 async function saveTagDraft() {
   const folder = tagDraft.folder;
@@ -3337,6 +3519,23 @@ function showFixPrompt(prompt) {
   ta.focus();
   ta.select();
 }
+async function openPromptChat(prompt) {
+  const text = String(prompt || "").trim();
+  if (!text) return;
+  try {
+    const r = await fetch("/api/prompt-deeplink", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Skills-Check-Token": WRITE_TOKEN },
+      body: JSON.stringify({ prompt: text }),
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok || !out.ok) {
+      window.alert(out.error || ("打开对话失败：HTTP " + r.status));
+    }
+  } catch (e) {
+    window.alert("打开对话失败：" + e);
+  }
+}
 document.getElementById("fixClose").addEventListener("click", closeFixModal);
 document.getElementById("promptCopy").addEventListener("click", async () => {
   const text = document.getElementById("promptText").value;
@@ -3344,11 +3543,25 @@ document.getElementById("promptCopy").addEventListener("click", async () => {
   await copyPromptText(text);
   closeFixModal();
 });
+document.getElementById("promptChat").addEventListener("click", async () => {
+  const text = document.getElementById("promptText").value;
+  if (!text) return;
+  await openPromptChat(text);
+  closeFixModal();
+});
 document.addEventListener("click", (ev) => {
   if (!ev.target.closest("#ctxMenu")) closeCtxMenu();
   const inTags = ev.composedPath().some((n) => n && n.id === "tagFilters");
   if (tagMenuOpen && !inTags) setTagMenuOpen(false);
-  const openBtn = ev.target.closest(".fix-btn[data-prompt]");
+  const chatBtn = ev.target.closest(".fix-btn[data-chat]");
+  if (chatBtn) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const prompt = decodeURIComponent(chatBtn.getAttribute("data-chat") || "").trim();
+    if (prompt) openPromptChat(prompt);
+    return;
+  }
+  const openBtn = ev.target.closest(".copy-btn[data-prompt]");
   if (openBtn) {
     ev.preventDefault();
     ev.stopPropagation();
@@ -3534,7 +3747,7 @@ def serve_report(
 
         def do_POST(self) -> None:  # noqa: N802
             path = unquote(urlparse(self.path).path)
-            if path not in ("/api/tag", "/api/ignore"):
+            if path not in ("/api/tag", "/api/ignore", "/api/kind", "/api/prompt-deeplink"):
                 self.send_error(404, "Not Found")
                 return
             if self.headers.get("X-Skills-Check-Token") != write_token:
@@ -3557,11 +3770,19 @@ def serve_report(
                 return
             try:
                 payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                if path == "/api/prompt-deeplink":
+                    open_prompt_deeplink(payload.get("prompt"))
+                    self._send_json(200, {"ok": True})
+                    return
                 with lock:
                     extra: dict = {}
                     if path == "/api/tag":
                         extra["tags"] = write_skill_tags(
                             skills_root, payload.get("folder"), payload.get("tags")
+                        )
+                    elif path == "/api/kind":
+                        extra["kind"] = write_skill_kind(
+                            skills_root, payload.get("folder"), payload.get("kind")
                         )
                     else:
                         ignore_skill_warn(

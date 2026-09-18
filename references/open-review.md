@@ -36,6 +36,7 @@ python "<skills-check>/scripts/skills-check-viewer.py" --print --skill "<skill-f
    - missing `SKILL.md` Commands row `/skill-review`
    - missing `scripts/open-review.ps1`, or the script does not call `skills-check\scripts\skills-check-viewer.py`
    - missing `tag.txt` (write a short tag from the folder name; tell the user they can rename)
+   - missing `kind.txt` (write `演进`; tell the user they can switch to 底本)
 4. Adapt in-scope failing skills with `references/adopt-review.md` (extract companions from that skill’s existing `SKILL.md` / `README.md`; do not invent domain workflow). Overview: then `--write-open-scripts` once for the root. Single: if that skill’s opener is missing, write **that** `scripts/open-review.ps1` only; do not rewrite every skill.
 5. Re-run the same-scope scan. Open Review only when in-scope required companions and `/skill-review` / opener path pass. Remaining 需关注 (pairing, examples, description length) may stay; mention them in the short summary.
 
@@ -112,8 +113,8 @@ python "<skills-check>/scripts/skills-check-viewer.py" --write-open-scripts --pr
 
 | View | Hash | Content |
 |------|------|---------|
-| **Overview** | `#/` | Summary cards + each skill’s status, issues, one-line intro. Status filter row, then a **tag dropdown** (multi-check = 任一命中). 「清除筛选」clears status + tags. **Right-click a card** → 编辑标签 / 进入 Review 页 / 复制修复提示词 |
-| **Single skill** | `#/skill/<folder>` | 状态为需关注/缺件时标题栏下直接列出问题（点「复制提示词」弹窗给出可粘贴的修复说明；需关注可点「忽略」），再是 **使用方法** / 能力芯片 / **功能描述** / **功能** / **执行步骤**；右上角下拉切换 skill |
+| **Overview** | `#/` | Summary cards + each skill’s status, issues, one-line intro. Status filter row, then **类型** chips（演进型 / 底本型）and a **tag dropdown** (multi-check = 任一命中). 「清除筛选」clears status + type + tags. **Right-click a card** → 编辑标签 / 标为演进型 / 标为底本型 / 进入 Review 页 / 开对话修复 / 复制修复提示词 |
+| **Single skill** | `#/skill/<folder>` | 状态为需关注/缺件时标题栏下直接列出问题（点「开对话」弹出预填对话，需确认发送；点「复制」弹出可粘贴的修复说明；需关注可点「忽略」），再是 **使用方法** / 能力芯片 / **功能描述** / **功能** / **执行步骤**；右上角下拉切换 skill |
 
 **怎么用** is read only from each skill’s **`review-usage.md`**. Structure:
 
@@ -122,11 +123,15 @@ python "<skills-check>/scripts/skills-check-viewer.py" --write-open-scripts --pr
 
 **功能描述 / 执行步骤** come from Chinese **`review-body.md`**（`## 能做什么` 在页面上显示为 **功能描述**）。 **Overview / detail 简介** comes from **`review-intro.md`**. English frontmatter `description` and the README pair are not used for the human intro. Page order: 使用方法 → 能做什么芯片 → 功能描述 → 功能 / 执行步骤.
 
-**Fix hook:** 需关注/缺件条目上的「复制提示词」弹出完整修复说明。弹窗里再点「复制提示词」写入剪贴板并关闭，可直接去粘贴。点框外不关闭。不打开编辑器、不切工作区。
+**Fix hook:** 需关注/缺件条目上的「复制」弹出完整修复说明。弹窗里再点「复制提示词」写入剪贴板并关闭，可直接去粘贴。点框外不关闭。复制这条路径不打开编辑器、不切工作区。
+
+**Chat hook:** 需关注/缺件时「开对话」（总览右键「开对话修复」、弹窗「开对话」同）走 prompt deeplink（`cursor://anysphere.cursor-deeplink/prompt?text=`），弹出预填对话，**需用户确认发送**，不会自动执行。写入走 `POST /api/prompt-deeplink`，鉴权与 `/api/tag` 相同。
 
 **Ignore hook:** 需关注条目上的「忽略」写入本 skill 的 `review-ignored.json`（按检查 id + 原文记住这一条）。之后总览和单页都不再列出；该 skill 若只剩被忽略的需关注、没有缺件，状态变为通过。缺件没有忽略按钮。写入走 `POST /api/ignore`，鉴权与 `/api/tag` 相同。同一条检查如果原文变了会再出现。
 
 **Tag hook:** 总览卡片右键 →「编辑标签」弹窗（当前标签可 ✕ 删、候选点一下加入、输入框回车新建）→「保存」直接写该 skill 的 `tag.txt` 并刷新卡片与筛选；清空则删除 `tag.txt`。写入走 `POST /api/tag`，只认本次会话 token、拒绝跨站与 skills 根目录之外的路径。候选与词表：`skill-authoring.md` § Tag。
+
+**Kind hook:** 总览卡片名称旁显示 **演进型** / **底本型**（`kind.txt` 一行 `演进` 或 `底本`）。总览「类型」筛选点一下只看该类，再点取消。右键 →「标为演进型」/「标为底本型」走 `POST /api/kind` 写入并刷新。缺文件或取值非法 = 缺件。规范：`skill-authoring.md` § Skill kind。
 
 File roles and pairing rules: `skill-authoring.md`.
 
@@ -134,7 +139,7 @@ File roles and pairing rules: `skill-authoring.md`.
 
 | Check | Pass | 缺件 (fail) | 需关注 (warn) |
 |-------|------|-------------|----------------|
-| File / role checks | required companions present: `README.md` + `README.zh.md`（互相入口；英文/中文安装提示词；简介→安装→内容→其他）、`review-intro` / `review-body` / `review-usage`；不用具体 Agent 应用名 | missing `README.md` / `README.zh.md` / `review-*` / `tag.txt` / `open-review.ps1`；README 缺另一语入口、缺对应语言的安装提示词或排版顺序不对；出现具体 Agent 应用名 | pairing leftovers, examples, description length |
+| File / role checks | required companions present: `README.md` + `README.zh.md`（互相入口；英文/中文安装提示词；简介→安装→内容→其他）、`review-intro` / `review-body` / `review-usage`；不用具体 Agent 应用名 | missing `README.md` / `README.zh.md` / `review-*` / `tag.txt` / `kind.txt` / `open-review.ps1`；`kind.txt` 不是 `演进` 或 `底本`；README 缺另一语入口、缺对应语言的安装提示词或排版顺序不对；出现具体 Agent 应用名 | pairing leftovers, examples, description length |
 | **能做什么条目** | 页面「功能描述」：功能本身、规则、细节；每项子列表；不重复命令/执行步骤，不写人类页 | — | 标签后写成一段；或把 slash 命令、`先`/`再`/`然后`、人类页清单写进功能描述 |
 | **README 面向用户** | 具体内容只有 功能介绍 + 怎么用（你说什么 → 会发生什么）+ 常见改动（想改什么 → 对 Agent 说的一句话） | — | README 残留文件角色 / 目录清单表或 `何时` / `怎么调用` / `What it does` 之类多余小节；缺 `功能介绍` / `怎么用` / `常见改动` |
 | **肯定/否定配对** | 无否定句，或每条 Must not 与某条 Must 有包含/重合（或显式 `← Must`） | — | 否定句缺少重合肯定句；README/正文里冗余括号否定 |
@@ -149,6 +154,7 @@ Violations of the pairing rule are **需关注**, not 缺件. A missing README f
 - Show the overview command on Feishu Review **only** for `skills-check`.
 - Default open to the agent's built-in browser: viewer `--no-browser`, then `open_resource`. *(see § Browser)*
 - Persist ignored 需关注 via `POST /api/ignore` into this skill’s `review-ignored.json` (id + 原文). *(see § Views · Ignore hook)*
+- 需关注/缺件时「开对话」走 prompt deeplink 弹出预填对话，等用户确认发送. *(see § Views · Chat hook)*
 
 ## Must not
 
@@ -161,3 +167,4 @@ Violations of the pairing rule are **需关注**, not 缺件. A missing README f
 - On `/<skill> /skill-review`, adapt or block on sibling skills. *(← Must: single-page preflight is that skill only)*
 - Treat resident auto-attach as the skill named for `/skill-review`. *(← Must: detect `/` `@` from the user message)*
 - Put an 忽略 button on 缺件. *(← Must: persist ignored 需关注)*
+- Auto-execute the prefilled prompt from「开对话」. *(← Must: user confirms send)*

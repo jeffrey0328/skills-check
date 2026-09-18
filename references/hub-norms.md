@@ -26,7 +26,8 @@
 | `references/sync-on-update.md` | Agent | Sync after a skill update |
 | `references/skill-authoring.md` | Agent | Create/update any Agent Skill (shape, layers, companions) |
 | `tag-vocab.txt` | Human / Review | 全套 skill 共用的标签词表（总览编辑标签时的候选，一行一个） |
-| `scripts/skills-check-viewer.py` | Agent / local | Local HTTP Review viewer（含 `POST /api/tag` 写 `tag.txt`、`POST /api/ignore` 写 `review-ignored.json`） |
+| `kind.txt` | Human / Review | 本 skill 的类型：一行 `演进` 或 `底本`（总览/单页显示演进型 / 底本型） |
+| `scripts/skills-check-viewer.py` | Agent / local | Local HTTP Review viewer（含 `POST /api/tag` 写 `tag.txt`、`POST /api/kind` 写 `kind.txt`、`POST /api/ignore` 写 `review-ignored.json`、`POST /api/prompt-deeplink` 打开预填对话） |
 | `scripts/open-review.ps1` | Agent | This skill’s `/skill-review` |
 | `/skill-review` (user commands) | Agent | Global command — alone = overview; with `/<skill>` = single |
 | `review-ignored.json` | Local | 已忽略的需关注（检查 id + 原文；本机文件，不进 git） |
@@ -58,6 +59,6 @@
 - [ ] Review open ran § Preflight (overview = fleet; single page = that skill only); in-scope unadapted skills were fixed before the viewer started.
 - [ ] Intent routed to one of: `skill-authoring.md` / `open-review.md` / `adopt-review.md` / `sync-on-update.md`.
 - [ ] 关联记录 checked + updated when files or `##` headings changed.
-- [ ] Companions aligned (`README.md` / `README.zh.md` / `review-*` / `tag.txt`) or explicitly unchanged with reason.
+- [ ] Companions aligned (`README.md` / `README.zh.md` / `review-*` / `tag.txt` / `kind.txt`) or explicitly unchanged with reason.
 - [ ] Opener template changes regenerated with `--write-open-scripts`.
 - [ ] Post-write user brief when this skill’s Route / workflow changed.
